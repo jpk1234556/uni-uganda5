@@ -8,6 +8,7 @@ import Auth from "@/pages/Auth";
 import OwnerDashboard from "@/pages/OwnerDashboard";
 import AdminDashboard from "@/pages/AdminDashboard";
 import StudentDashboard from "@/pages/StudentDashboard";
+import VerifyEmail from "@/pages/VerifyEmail";
 import Navbar from "@/components/layout/Navbar";
 import Footer from "@/components/layout/Footer";
 import ProtectedRoute from "@/components/layout/ProtectedRoute";
@@ -26,6 +27,7 @@ function App() {
             <Route path="/roommates" element={<Roommates />} />
             <Route path="/hostel/:id" element={<HostelDetail />} />
             <Route path="/auth" element={<Auth />} />
+            <Route path="/verify-email" element={<VerifyEmail />} />
             
             {/* Protected Routes */}
             <Route path="/student/dashboard" element={
