@@ -43,9 +43,9 @@ export default function VerifyEmail() {
               }
            }, 1500);
         }
-      } catch (err: any) {
+      } catch (err) {
         setStatus("error");
-        setErrorMessage(err.message || "Failed to verify email.");
+        setErrorMessage(err instanceof Error ? err.message : "Failed to verify email.");
       }
     };
 

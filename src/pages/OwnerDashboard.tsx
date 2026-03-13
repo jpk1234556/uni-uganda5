@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -19,7 +19,7 @@ export default function OwnerDashboard() {
   const { user } = useAuth();
   
   const [properties, setProperties] = useState<Hostel[]>([]);
-  const [bookings, setBookings] = useState<any[]>([]);
+  const [bookings, setBookings] = useState<any[]>([]); // Using any[] temporarily, or define a Booking struct
   
   const [isLoading, setIsLoading] = useState(true);
   const [isCreating, setIsCreating] = useState(false);
@@ -33,13 +33,9 @@ export default function OwnerDashboard() {
     price_range: ""
   });
 
-  useEffect(() => {
-    if (user) {
-      fetchData();
-    }
-  }, [user]);
 
-  const fetchData = async () => {
+
+  const fetchData = useCallback(async () => {
     try {
       setIsLoading(true);
       // Fetch user's properties
@@ -54,7 +50,7 @@ export default function OwnerDashboard() {
 
       // Fetch bookings for these properties
       if (hostelsData && hostelsData.length > 0) {
-        const hostelIds = hostelsData.map(h => h.id);
+        const hostelIds = hostelsData.map((h: any) => h.id);
         const { data: bookingsData, error: bookingsError } = await supabase
           .from("bookings")
           .select(`
@@ -68,13 +64,19 @@ export default function OwnerDashboard() {
         if (bookingsError) throw bookingsError;
         setBookings(bookingsData || []);
       }
-    } catch (error: any) {
+    } catch (error) {
       console.error("Error fetching data:", error);
       toast.error("Failed to load dashboard data");
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [user]);
+
+  useEffect(() => {
+    if (user) {
+      fetchData();
+    }
+  }, [user, fetchData]);
 
   const handleCreateProperty = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -121,7 +123,7 @@ export default function OwnerDashboard() {
       toast.success(`Booking ${status}`);
       fetchData();
       
-    } catch (error: any) {
+    } catch {
       toast.error("Failed to update booking stauts");
     }
   };

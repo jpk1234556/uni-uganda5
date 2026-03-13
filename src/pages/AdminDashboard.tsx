@@ -58,9 +58,9 @@ export default function AdminDashboard() {
       setUsers(usersData || []);
 
       // 4. Aggregate Metrics
-      const studentCount = usersData?.filter(u => u.role === 'student').length || 0;
-      const ownerCount = usersData?.filter(u => u.role === 'hostel_owner').length || 0;
-      const activeHostelCount = allHostelsData?.filter(h => h.status === 'approved').length || 0;
+      const studentCount = usersData?.filter((u: DBUser) => u.role === 'student').length || 0;
+      const ownerCount = usersData?.filter((u: DBUser) => u.role === 'hostel_owner').length || 0;
+      const activeHostelCount = allHostelsData?.filter((h: Hostel) => h.status === 'approved').length || 0;
 
       setMetrics({
         totalStudents: studentCount,
@@ -248,7 +248,7 @@ export default function AdminDashboard() {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {users.map((u) => (
+                    {users.map((u: DBUser) => (
                       <TableRow key={u.id}>
                         <TableCell className="font-medium">{u.first_name} {u.last_name}</TableCell>
                         <TableCell>{u.email}</TableCell>

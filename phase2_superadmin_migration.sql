@@ -18,11 +18,19 @@ CREATE TABLE IF NOT EXISTS payments (
 -- Enable RLS for payments
 ALTER TABLE payments ENABLE ROW LEVEL SECURITY;
 
+-- Create a security definer function to check user roles without RLS recursion
+CREATE OR REPLACE FUNCTION public.get_user_role()
+RETURNS TEXT
+LANGUAGE sql
+SECURITY DEFINER
+SET search_path = public
+AS $$
+  SELECT role FROM users WHERE id = auth.uid();
+$$;
+
 -- Allow super_admin to read all payments
 CREATE POLICY "Super admins can view all payments" ON payments
-  FOR SELECT USING (
-    (SELECT role FROM users WHERE id = auth.uid()) = 'super_admin'
-  );
+  FOR SELECT USING (public.get_user_role() = 'super_admin');
 
 -- Allow hostel_owners to read payments related to their hostels
 CREATE POLICY "Owners can view their payments" ON payments
