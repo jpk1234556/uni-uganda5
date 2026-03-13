@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Home, ClipboardList, UserCircle, Loader2 } from "lucide-react";
+import { Home, ClipboardList, UserCircle, Loader2, GraduationCap } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useAuth } from "@/context/AuthContext";
 import { supabase } from "@/lib/supabase";
@@ -45,20 +45,29 @@ export default function StudentDashboard() {
   }, [user, fetchApplications]);
 
   return (
-    <div className="container mx-auto px-4 py-8 max-w-5xl animate-in fade-in duration-500">
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold tracking-tight">My Dashboard</h1>
-        <p className="text-muted-foreground">Manage your booking applications and profile.</p>
+    <div className="min-h-[calc(100vh-4rem)] bg-slate-50/50 pb-12">
+      {/* Distinct Student Header Area */}
+      <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border-b border-blue-100 dark:from-blue-950/20 dark:border-blue-900/50 pt-10 pb-12 mb-8">
+        <div className="container mx-auto px-4 max-w-5xl animate-in fade-in duration-500">
+          <div className="flex items-center gap-3 mb-2">
+            <div className="p-2.5 bg-blue-100 text-blue-700 rounded-full dark:bg-blue-900/50 dark:text-blue-400">
+              <GraduationCap className="h-7 w-7" />
+            </div>
+            <h1 className="text-3xl font-bold tracking-tight text-slate-900 dark:text-slate-50">My Dashboard</h1>
+          </div>
+          <p className="text-blue-800/80 dark:text-blue-300/80 max-w-2xl text-lg">Manage your booking applications, track your stays, and set up your student profile.</p>
+        </div>
       </div>
 
-      <Tabs defaultValue="applications" className="space-y-4">
-        <TabsList className="bg-muted/50 p-1">
-          <TabsTrigger value="applications" className="gap-2"><ClipboardList className="h-4 w-4" /> My Applications</TabsTrigger>
-          <TabsTrigger value="profile" className="gap-2"><UserCircle className="h-4 w-4" /> Profile Details</TabsTrigger>
-        </TabsList>
+      <div className="container mx-auto px-4 max-w-5xl">
+        <Tabs defaultValue="applications" className="space-y-6">
+          <TabsList className="bg-white border border-slate-200 p-1.5 shadow-sm rounded-xl h-auto flex flex-wrap max-w-fit">
+            <TabsTrigger value="applications" className="gap-2 px-6 py-2.5 data-[state=active]:bg-blue-50 data-[state=active]:text-blue-700 rounded-lg transition-all"><ClipboardList className="h-4 w-4" /> My Applications</TabsTrigger>
+            <TabsTrigger value="profile" className="gap-2 px-6 py-2.5 data-[state=active]:bg-blue-50 data-[state=active]:text-blue-700 rounded-lg transition-all"><UserCircle className="h-4 w-4" /> Profile Details</TabsTrigger>
+          </TabsList>
 
-        <TabsContent value="applications">
-          <Card className="border-primary/10 shadow-md">
+          <TabsContent value="applications">
+            <Card className="border-blue-100/50 shadow-md bg-white">
             <CardHeader>
               <CardTitle>Recent Booking Requests</CardTitle>
               <CardDescription>Keep track of your hostel applications.</CardDescription>
@@ -71,7 +80,7 @@ export default function StudentDashboard() {
                   <Home className="h-10 w-10 text-muted-foreground mx-auto mb-3" />
                   <p className="text-muted-foreground font-medium mb-4">You haven't applied to any hostels yet.</p>
                   <Link to="/search">
-                    <Button>Find a Hostel</Button>
+                    <Button className="bg-blue-600 hover:bg-blue-700 text-white shadow-sm transition-all">Find a Hostel</Button>
                   </Link>
                 </div>
               ) : (
@@ -99,7 +108,7 @@ export default function StudentDashboard() {
         </TabsContent>
 
         <TabsContent value="profile">
-          <Card className="border-primary/10 shadow-md">
+          <Card className="border-blue-100/50 shadow-md bg-white">
             <CardHeader>
               <CardTitle>Extended Profile</CardTitle>
               <CardDescription>Your tenant detail information required for bookings.</CardDescription>
@@ -111,6 +120,7 @@ export default function StudentDashboard() {
           </Card>
         </TabsContent>
       </Tabs>
+      </div>
     </div>
   );
 }

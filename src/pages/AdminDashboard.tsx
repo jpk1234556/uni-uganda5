@@ -4,7 +4,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
-import { CheckCircle, XCircle, Loader2, Ban, UserCheck, Trash2, Home, Users, BarChart3, CreditCard } from "lucide-react";
+import { CheckCircle, XCircle, Loader2, Ban, UserCheck, Trash2, Home, Users, BarChart3, CreditCard, ShieldCheck } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import { toast } from "sonner";
 import type { Hostel, DBUser } from "@/types";
@@ -128,23 +128,33 @@ export default function AdminDashboard() {
   };
 
   return (
-    <div className="container mx-auto px-4 py-8 max-w-7xl animate-in fade-in duration-500">
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold tracking-tight">Super Admin Dashboard</h1>
-        <p className="text-muted-foreground">Manage platform users, hostels, and revenue.</p>
+    <div className="min-h-[calc(100vh-4rem)] bg-slate-50/50 pb-12">
+      {/* Distinct Admin Header Area */}
+      <div className="bg-slate-900 border-b border-indigo-900/50 pt-10 pb-12 mb-8">
+        <div className="container mx-auto px-4 max-w-7xl animate-in fade-in duration-500">
+          <div className="flex items-center gap-3 mb-2">
+            <div className="p-2.5 bg-indigo-500/20 text-indigo-400 rounded-lg shadow-[0_0_15px_rgba(99,102,241,0.2)]">
+              <ShieldCheck className="h-7 w-7" />
+            </div>
+            <h1 className="text-3xl font-bold tracking-tight text-white">Super Admin Dashboard</h1>
+          </div>
+          <p className="text-slate-400 max-w-2xl text-lg">Manage platform users, oversee active hostels, and review key operational metrics.</p>
+        </div>
       </div>
 
-      <Tabs defaultValue="overview" className="space-y-6">
-        <TabsList className="bg-muted/50 p-1">
-          <TabsTrigger value="overview" className="gap-2"><BarChart3 className="h-4 w-4" /> Overview</TabsTrigger>
-          <TabsTrigger value="users" className="gap-2"><Users className="h-4 w-4" /> Users</TabsTrigger>
-          <TabsTrigger value="hostels" className="gap-2"><Home className="h-4 w-4" /> All Hostels</TabsTrigger>
-          <TabsTrigger value="payments" className="gap-2"><CreditCard className="h-4 w-4" /> Payments</TabsTrigger>
-        </TabsList>
+      <div className="container mx-auto px-4 max-w-7xl">
+        <Tabs defaultValue="overview" className="space-y-6">
+          <TabsList className="bg-slate-900 border border-slate-800 p-1.5 shadow-[0_5px_15px_rgba(0,0,0,0.1)] rounded-xl h-auto flex flex-wrap max-w-fit">
+            <TabsTrigger value="overview" className="gap-2 px-6 py-2.5 data-[state=active]:bg-indigo-600 data-[state=active]:text-white text-slate-400 rounded-lg transition-all"><BarChart3 className="h-4 w-4" /> Overview</TabsTrigger>
+            <TabsTrigger value="users" className="gap-2 px-6 py-2.5 data-[state=active]:bg-indigo-600 data-[state=active]:text-white text-slate-400 rounded-lg transition-all"><Users className="h-4 w-4" /> Users</TabsTrigger>
+            <TabsTrigger value="hostels" className="gap-2 px-6 py-2.5 data-[state=active]:bg-indigo-600 data-[state=active]:text-white text-slate-400 rounded-lg transition-all"><Home className="h-4 w-4" /> All Hostels</TabsTrigger>
+            <TabsTrigger value="payments" className="gap-2 px-6 py-2.5 data-[state=active]:bg-indigo-600 data-[state=active]:text-white text-slate-400 rounded-lg transition-all"><CreditCard className="h-4 w-4" /> Payments</TabsTrigger>
+          </TabsList>
 
-        <TabsContent value="overview" className="space-y-6">
+          <TabsContent value="overview" className="space-y-6">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-            <Card className="border-primary/10 shadow-sm">
+            <Card className="border-indigo-100 shadow-sm bg-white overflow-hidden relative">
+              <div className="absolute top-0 left-0 w-1 h-full bg-blue-500" />
               <CardHeader className="pb-2">
                 <CardTitle className="text-sm font-medium text-muted-foreground">Total Students</CardTitle>
               </CardHeader>
@@ -178,8 +188,8 @@ export default function AdminDashboard() {
             </Card>
           </div>
 
-          <Card className="border-primary/10 shadow-md">
-            <CardHeader>
+          <Card className="border-indigo-100/50 shadow-md bg-white">
+            <CardHeader className="bg-slate-50/50 border-b border-slate-100">
               <CardTitle>Pending Hostel Verifications</CardTitle>
               <CardDescription>Approve or reject new property listings to ensure platform trust and quality.</CardDescription>
             </CardHeader>
@@ -228,8 +238,8 @@ export default function AdminDashboard() {
         </TabsContent>
 
         <TabsContent value="users" className="space-y-6">
-          <Card className="border-primary/10 shadow-md">
-            <CardHeader>
+          <Card className="border-indigo-100/50 shadow-md bg-white">
+            <CardHeader className="bg-slate-50/50 border-b border-slate-100">
               <CardTitle>User Management</CardTitle>
               <CardDescription>Suspend or manage user accounts across the platform.</CardDescription>
             </CardHeader>
@@ -279,8 +289,8 @@ export default function AdminDashboard() {
         </TabsContent>
 
         <TabsContent value="hostels" className="space-y-6">
-          <Card className="border-primary/10 shadow-md">
-            <CardHeader>
+          <Card className="border-indigo-100/50 shadow-md bg-white">
+            <CardHeader className="bg-slate-50/50 border-b border-slate-100">
               <CardTitle>All Platform Hostels</CardTitle>
               <CardDescription>View and manage every property listed on the platform.</CardDescription>
             </CardHeader>
@@ -324,8 +334,8 @@ export default function AdminDashboard() {
         </TabsContent>
 
         <TabsContent value="payments" className="space-y-6">
-          <Card className="border-primary/10 shadow-md">
-            <CardHeader>
+          <Card className="border-indigo-100/50 shadow-md bg-white">
+            <CardHeader className="bg-slate-50/50 border-b border-slate-100">
               <CardTitle>Platform Revenue</CardTitle>
               <CardDescription>Track booking deposits and platform fees.</CardDescription>
             </CardHeader>
@@ -338,7 +348,8 @@ export default function AdminDashboard() {
             </CardContent>
           </Card>
         </TabsContent>
-      </Tabs>
+        </Tabs>
+      </div>
     </div>
   );
 }

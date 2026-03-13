@@ -31,8 +31,8 @@ DROP POLICY IF EXISTS "Hostel owners can view their payments" ON "payments";
 DROP POLICY IF EXISTS "Students can view own payments" ON "payments";
 
 -- Drop functions
-DROP FUNCTION IF EXISTS public.get_user_role();
-DROP FUNCTION IF EXISTS IF EXISTS update_updated_at_column();
+DROP FUNCTION IF EXISTS public.get_user_role() CASCADE;
+DROP FUNCTION IF EXISTS update_updated_at_column() CASCADE;
 DROP TRIGGER IF EXISTS update_users_updated_at ON "users";
 DROP TRIGGER IF EXISTS update_hostels_updated_at ON "hostels";
 DROP TRIGGER IF EXISTS update_room_types_updated_at ON "room_types";

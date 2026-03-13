@@ -9,7 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
 import { Textarea } from "@/components/ui/textarea";
-import { Plus, Home, Users, Settings, Loader2 } from "lucide-react";
+import { Plus, Home, Users, Settings, Loader2, Building } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 import { supabase } from "@/lib/supabase";
 import type { Hostel } from "@/types";
@@ -129,19 +129,27 @@ export default function OwnerDashboard() {
   };
 
   return (
-    <div className="container mx-auto px-4 py-8 max-w-7xl animate-in fade-in duration-500">
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight">Owner Dashboard</h1>
-          <p className="text-muted-foreground">Manage your properties and booking requests.</p>
-        </div>
-        
-        <Dialog>
-          <DialogTrigger asChild>
-            <Button className="gap-2">
-              <Plus className="h-4 w-4" /> Add Property
-            </Button>
-          </DialogTrigger>
+    <div className="min-h-[calc(100vh-4rem)] bg-slate-50/50 pb-12">
+      {/* Distinct Owner Header Area */}
+      <div className="bg-gradient-to-r from-emerald-50 to-teal-50 border-b border-emerald-100 dark:from-emerald-950/20 dark:border-emerald-900/50 pt-10 pb-12 mb-8">
+        <div className="container mx-auto px-4 max-w-7xl animate-in fade-in duration-500">
+          <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
+            <div>
+              <div className="flex items-center gap-3 mb-2">
+                <div className="p-2.5 bg-emerald-100 text-emerald-700 rounded-lg dark:bg-emerald-900/50 dark:text-emerald-400">
+                  <Building className="h-7 w-7" />
+                </div>
+                <h1 className="text-3xl font-bold tracking-tight text-slate-900 dark:text-slate-50">Property Dashboard</h1>
+              </div>
+              <p className="text-emerald-800/80 dark:text-emerald-300/80 max-w-2xl text-lg">Manage your listings, review student applications, and track your revenue.</p>
+            </div>
+            
+            <Dialog>
+              <DialogTrigger asChild>
+                <Button className="gap-2 bg-emerald-600 hover:bg-emerald-700 text-white shadow-md transition-all sm:text-lg sm:px-6">
+                  <Plus className="h-5 w-5" /> Add New Property
+                </Button>
+              </DialogTrigger>
           <DialogContent className="sm:max-w-[500px]">
             <DialogHeader>
               <DialogTitle>List New Property</DialogTitle>
@@ -181,17 +189,20 @@ export default function OwnerDashboard() {
             </form>
           </DialogContent>
         </Dialog>
+          </div>
+        </div>
       </div>
 
-      <Tabs defaultValue="properties" className="space-y-4">
-        <TabsList className="bg-muted/50 p-1">
-          <TabsTrigger value="properties" className="gap-2"><Home className="h-4 w-4" /> Properties</TabsTrigger>
-          <TabsTrigger value="bookings" className="gap-2"><Users className="h-4 w-4" /> Bookings</TabsTrigger>
-          <TabsTrigger value="settings" className="gap-2"><Settings className="h-4 w-4" /> Settings</TabsTrigger>
-        </TabsList>
+      <div className="container mx-auto px-4 max-w-7xl">
+        <Tabs defaultValue="properties" className="space-y-6">
+          <TabsList className="bg-white border border-slate-200 p-1.5 shadow-sm rounded-xl h-auto flex flex-wrap max-w-fit">
+            <TabsTrigger value="properties" className="gap-2 px-6 py-2.5 data-[state=active]:bg-emerald-50 data-[state=active]:text-emerald-700 rounded-lg transition-all"><Home className="h-4 w-4" /> Properties</TabsTrigger>
+            <TabsTrigger value="bookings" className="gap-2 px-6 py-2.5 data-[state=active]:bg-emerald-50 data-[state=active]:text-emerald-700 rounded-lg transition-all"><Users className="h-4 w-4" /> Bookings</TabsTrigger>
+            <TabsTrigger value="settings" className="gap-2 px-6 py-2.5 data-[state=active]:bg-emerald-50 data-[state=active]:text-emerald-700 rounded-lg transition-all"><Settings className="h-4 w-4" /> Settings</TabsTrigger>
+          </TabsList>
 
-        <TabsContent value="properties">
-          <Card className="border-primary/10 shadow-md">
+          <TabsContent value="properties">
+            <Card className="border-emerald-100/50 shadow-md bg-white">
              {isLoading ? (
                <div className="py-20 flex justify-center"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>
              ) : (
@@ -240,7 +251,7 @@ export default function OwnerDashboard() {
         </TabsContent>
 
         <TabsContent value="bookings">
-          <Card className="border-primary/10 shadow-md">
+          <Card className="border-emerald-100/50 shadow-md bg-white">
             {isLoading ? (
                <div className="py-20 flex justify-center"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>
              ) : (
@@ -299,7 +310,7 @@ export default function OwnerDashboard() {
         </TabsContent>
         
         <TabsContent value="settings">
-          <Card className="border-primary/10 shadow-md">
+          <Card className="border-emerald-100/50 shadow-md bg-white">
             <CardHeader>
               <CardTitle>Account Settings</CardTitle>
               <CardDescription>Manage your owner profile and payout settings.</CardDescription>
@@ -310,6 +321,7 @@ export default function OwnerDashboard() {
           </Card>
         </TabsContent>
       </Tabs>
+      </div>
     </div>
   );
 }
