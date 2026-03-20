@@ -273,8 +273,9 @@ export default function OwnerDashboard() {
                       <div className="text-center py-12 text-muted-foreground border border-dashed rounded-lg">
                         You have not listed any properties yet.
                       </div>
-                  ) : (
-                    <Table>
+                    ) : (
+                      <div className="overflow-x-auto border rounded-xl">
+                        <Table>
                       <TableHeader>
                         <TableRow>
                           <TableHead>Property Name</TableHead>
@@ -310,6 +311,7 @@ export default function OwnerDashboard() {
                         ))}
                       </TableBody>
                     </Table>
+                  </div>
                   )}
                 </CardContent>
              </>
@@ -333,7 +335,8 @@ export default function OwnerDashboard() {
                           No bookings found for your properties.
                         </div>
                     ) : (
-                      <Table>
+                      <div className="overflow-x-auto border rounded-xl">
+                        <Table>
                         <TableHeader>
                           <TableRow>
                             <TableHead>Student</TableHead>
@@ -369,6 +372,7 @@ export default function OwnerDashboard() {
                           ))}
                         </TableBody>
                       </Table>
+                    </div>
                     )}
                   </CardContent>
                 </>

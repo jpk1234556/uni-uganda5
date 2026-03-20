@@ -56,10 +56,7 @@ export default function Footer() {
             <h4 className="text-white font-semibold mb-6">Quick Links</h4>
             <ul className="space-y-4 text-sm">
               <li><Link to="/search" className="hover:text-primary transition-colors">Browse Hostels</Link></li>
-              <li><Link to="/owner/dashboard" className="hover:text-primary transition-colors">List Your Hostel</Link></li>
               <li><Link to="/auth" className="hover:text-primary transition-colors">Student Registration</Link></li>
-              <li><Link to="/auth" className="hover:text-primary transition-colors">Hostel Owner Login</Link></li>
-              <li><Link to="#" className="hover:text-primary transition-colors">Pricing & Plans</Link></li>
               <li><Link to="#" className="hover:text-primary transition-colors">FAQs</Link></li>
             </ul>
           </div>
