@@ -1,0 +1,16 @@
+src/components/admin/AdminLayout.tsx(1,10): error TS1484: 'ReactNode' is a type and must be imported using a type-only import when 'verbatimModuleSyntax' is enabled.
+src/components/admin/BookingsManager.tsx(9,24): error TS2307: Cannot find module 'date-fns' or its corresponding type declarations.
+src/components/admin/HostelsManager.tsx(9,1): error TS6133: 'Hostel' is declared but its value is never read.
+src/components/admin/HostelsManager.tsx(9,10): error TS1484: 'Hostel' is a type and must be imported using a type-only import when 'verbatimModuleSyntax' is enabled.
+src/components/admin/Overview.tsx(30,47): error TS7006: Parameter 'u' implicitly has an 'any' type.
+src/components/admin/Overview.tsx(31,45): error TS7006: Parameter 'u' implicitly has an 'any' type.
+src/components/admin/Overview.tsx(32,49): error TS7006: Parameter 'h' implicitly has an 'any' type.
+src/components/admin/Overview.tsx(33,50): error TS7006: Parameter 'h' implicitly has an 'any' type.
+src/components/admin/PaymentsManager.tsx(8,24): error TS2307: Cannot find module 'date-fns' or its corresponding type declarations.
+src/components/admin/Settings.tsx(5,24): error TS2307: Cannot find module '@/components/ui/switch' or its corresponding type declarations.
+src/components/admin/UsersManager.tsx(3,29): error TS6133: 'CardDescription' is declared but its value is never read.
+src/components/admin/UsersManager.tsx(3,46): error TS6133: 'CardHeader' is declared but its value is never read.
+src/components/admin/UsersManager.tsx(3,58): error TS6133: 'CardTitle' is declared but its value is never read.
+src/components/admin/UsersManager.tsx(7,132): error TS2307: Cannot find module '@/components/ui/dropdown-menu' or its corresponding type declarations.
+src/components/admin/UsersManager.tsx(10,10): error TS1484: 'DBUser' is a type and must be imported using a type-only import when 'verbatimModuleSyntax' is enabled.
+src/pages/AdminDashboard.tsx(1,20): error TS6133: 'useEffect' is declared but its value is never read.

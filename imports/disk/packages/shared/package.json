@@ -1,0 +1,15 @@
+{
+  "name": "@uni-nest/shared",
+  "version": "1.0.0",
+  "type": "module",
+  "main": "index.ts",
+  "exports": {
+    "./*": "./src/*"
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "^2.98.0",
+    "react": "^19.2.0",
+    "react-dom": "^19.2.0",
+    "vite": "^7.3.1"
+  }
+}

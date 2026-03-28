@@ -1,0 +1,10 @@
+{
+  "buildCommand": "npm run build -w @uni-nest/student",
+  "outputDirectory": "apps/student/dist",
+  "rewrites": [
+    {
+      "source": "/(.*)",
+      "destination": "/index.html"
+    }
+  ]
+}

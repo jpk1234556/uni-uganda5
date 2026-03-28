@@ -1,0 +1,7 @@
+src/pages/HostelDetail.tsx(157,20): error TS18048: 'hostel.rating' is possibly 'undefined'.
+src/pages/HostelDetail.tsx(201,73): error TS2552: Cannot find name 'Users'. Did you mean 'user'?
+src/pages/HostelDetail.tsx(231,30): error TS2339: Property 'users' does not exist on type 'Hostel'.
+src/pages/HostelDetail.tsx(231,57): error TS2339: Property 'users' does not exist on type 'Hostel'.
+src/pages/HostelDetail.tsx(233,81): error TS2339: Property 'users' does not exist on type 'Hostel'.
+src/pages/HostelDetail.tsx(233,99): error TS2339: Property 'users' does not exist on type 'Hostel'.
+src/pages/HostelDetail.tsx(233,126): error TS2339: Property 'users' does not exist on type 'Hostel'.

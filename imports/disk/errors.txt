@@ -1,0 +1,2 @@
+src/components/admin/Settings.tsx(5,24): error TS2307: Cannot find module '@/components/ui/switch' or its corresponding type declarations.
+src/components/admin/UsersManager.tsx(7,132): error TS2307: Cannot find module '@/components/ui/dropdown-menu' or its corresponding type declarations.
