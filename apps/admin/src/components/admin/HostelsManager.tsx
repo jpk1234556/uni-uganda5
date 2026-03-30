@@ -11,6 +11,8 @@ import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/context/AuthContext";
 import { toast } from "sonner";
 import type { Hostel } from "@/types";
+import { motion } from "motion/react";
+import { cn } from "@/lib/utils";
 
 export default function HostelsManager() {
   const { user } = useAuth();

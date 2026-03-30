@@ -20,14 +20,17 @@ export default function App() {
     <BrowserRouter>
       <AuthProvider>
         <Routes>
-          <Route path="/" element={<Navigate to="/admin/dashboard" replace />} />
+          <Route
+            path="/"
+            element={<Navigate to="/admin/dashboard" replace />}
+          />
           <Route path="/auth" element={<Auth appType="admin" />} />
-          
+
           {/* Admin Dashboard with Sidebar Layout */}
-          <Route 
-            path="/admin/*" 
+          <Route
+            path="/admin/*"
             element={
-              <ProtectedRoute allowedRoles={['super_admin']}>
+              <ProtectedRoute allowedRoles={["super_admin"]}>
                 <AdminLayout sidebar={<AdminSidebar />}>
                   <div className="p-4 md:p-8">
                     <Routes>
@@ -38,18 +41,30 @@ export default function App() {
                       <Route path="payments" element={<PaymentsManager />} />
                       <Route path="reviews" element={<ReviewsManager />} />
                       <Route path="reports" element={<ReportsManager />} />
-                      <Route path="verification" element={<HostelVerification />} />
-                      <Route path="universities" element={<UniversityManager />} />
+                      <Route
+                        path="verification"
+                        element={<HostelVerification />}
+                      />
+                      <Route
+                        path="universities"
+                        element={<UniversityManager />}
+                      />
                       <Route path="settings" element={<Settings />} />
-                      <Route path="*" element={<Navigate to="dashboard" replace />} />
+                      <Route
+                        path="*"
+                        element={<Navigate to="dashboard" replace />}
+                      />
                     </Routes>
                   </div>
                 </AdminLayout>
               </ProtectedRoute>
-            } 
+            }
           />
-          
-          <Route path="*" element={<Navigate to="/admin/dashboard" replace />} />
+
+          <Route
+            path="*"
+            element={<Navigate to="/admin/dashboard" replace />}
+          />
         </Routes>
       </AuthProvider>
     </BrowserRouter>

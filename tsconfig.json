@@ -16,8 +16,47 @@
     "allowJs": true,
     "jsx": "react-jsx",
     "paths": {
+      "@/components/ui/*": [
+        "./packages/ui/src/components/ui/*",
+        "./src/components/ui/*"
+      ],
+      "@/lib/utils": [
+        "./packages/ui/src/lib/utils",
+        "./src/lib/utils"
+      ],
+      "@/context/*": [
+        "./packages/shared/src/context/*",
+        "./src/context/*"
+      ],
+      "@/types": [
+        "./packages/shared/src/types/index",
+        "./src/types/index"
+      ],
+      "@/types/*": [
+        "./packages/shared/src/types/*",
+        "./src/types/*"
+      ],
+      "@/lib/supabase": [
+        "./packages/shared/src/lib/supabase",
+        "./src/lib/supabase"
+      ],
+      "@/components/layout/*": [
+        "./packages/shared/src/components/layout/*",
+        "./src/components/layout/*"
+      ],
+      "@/components/ErrorBoundary": [
+        "./packages/shared/src/components/ErrorBoundary",
+        "./src/components/ErrorBoundary"
+      ],
+      "@/pages/Auth": [
+        "./packages/shared/src/components/Auth",
+        "./src/pages/Auth"
+      ],
       "@/*": [
-        "./src/*"
+        "./src/*",
+        "./apps/student/src/*",
+        "./apps/owner/src/*",
+        "./apps/admin/src/*"
       ]
     },
     "allowImportingTsExtensions": true,

@@ -8,6 +8,7 @@ import { supabase } from "@/lib/supabase";
 import { toast } from "sonner";
 import type { DBUser } from "@/types";
 import { motion } from "motion/react";
+import { cn } from "@/lib/utils";
 
 export default function UsersManager() {
   const [users, setUsers] = useState<DBUser[]>([]);
