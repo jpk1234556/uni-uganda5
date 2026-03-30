@@ -493,8 +493,8 @@ export default function HostelsManager() {
             <div className="border border-slate-200 bg-slate-50/50 p-5">
               <h4 className="text-[10px] font-bold text-indigo-600 uppercase tracking-[0.2em] mb-4">Add_New_Inventory_Unit</h4>
               <form onSubmit={handleAddRoom} className="space-y-4">
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                  <div className="space-y-1.5 sm:col-span-1">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-4">
+                  <div className="space-y-1.5">
                     <Label className="text-[9px] font-bold text-slate-500 uppercase tracking-widest">Unit_Label</Label>
                     <Input required value={newRoom.name} onChange={e => setNewRoom({...newRoom, name: e.target.value})} placeholder="SINGLE_SELF" className="bg-white rounded-none border-slate-200 text-[10px] h-9 uppercase" />
                   </div>
@@ -506,14 +506,14 @@ export default function HostelsManager() {
                     <Label className="text-[9px] font-bold text-slate-500 uppercase tracking-widest">Bed_Count</Label>
                     <Input required type="number" min="1" value={newRoom.capacity} onChange={e => setNewRoom({...newRoom, capacity: e.target.value})} placeholder="1" className="bg-white rounded-none border-slate-200 text-[10px] h-9" />
                   </div>
-                </div>
-                <div className="space-y-1.5">
-                  <Label className="text-[9px] font-bold text-slate-500 uppercase tracking-widest">Media_Assets (URLs)</Label>
-                  <Input value={newRoom.images} onChange={e => setNewRoom({...newRoom, images: e.target.value})} placeholder="HTTPS://ROOM-IMG.JPG" className="bg-white rounded-none border-slate-200 text-[10px] h-9" />
-                </div>
-                <div className="space-y-1.5">
-                  <Label className="text-[9px] font-bold text-slate-500 uppercase tracking-widest">Unit_Description</Label>
-                  <Textarea value={newRoom.description} onChange={e => setNewRoom({...newRoom, description: e.target.value})} placeholder="DESCRIBE_UNIT_FEATURES" className="bg-white rounded-none border-slate-200 text-[10px] resize-none h-20 uppercase" />
+                  <div className="space-y-1.5">
+                    <Label className="text-[9px] font-bold text-slate-500 uppercase tracking-widest">Media_Assets (URLs)</Label>
+                    <Input value={newRoom.images} onChange={e => setNewRoom({...newRoom, images: e.target.value})} placeholder="HTTPS://ROOM-IMG.JPG" className="bg-white rounded-none border-slate-200 text-[10px] h-9" />
+                  </div>
+                  <div className="space-y-1.5 md:col-span-2">
+                    <Label className="text-[9px] font-bold text-slate-500 uppercase tracking-widest">Unit_Description</Label>
+                    <Textarea value={newRoom.description} onChange={e => setNewRoom({...newRoom, description: e.target.value})} placeholder="DESCRIBE_UNIT_FEATURES" className="bg-white rounded-none border-slate-200 text-[10px] resize-none h-20 uppercase" />
+                  </div>
                 </div>
                 <div className="flex justify-end pt-2">
                    <Button type="submit" className="bg-indigo-600 hover:bg-indigo-700 text-white text-[10px] font-bold uppercase tracking-[0.2em] rounded-none h-9 px-6 shadow-sm gap-2">
