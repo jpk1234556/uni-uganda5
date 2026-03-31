@@ -16,7 +16,7 @@ export default function App() {
     <BrowserRouter>
       <AuthProvider>
         <div className="flex flex-col min-h-screen">
-          <Navbar />
+          <Navbar appType="student" />
           <main className="flex-grow">
             <Suspense
               fallback={

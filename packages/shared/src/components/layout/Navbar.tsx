@@ -6,11 +6,11 @@ import { useAuth } from "@/context/AuthContext";
 import { Building2, Search, User, ChevronDown, Menu, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 
-export default function Navbar() {
+export default function Navbar({ appType }: { appType?: "student" | "owner" | "admin" }) {
   const { user, dbUser, signOut } = useAuth();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   
-  const isOwnerApp = dbUser?.role === 'hostel_owner';
+  const isOwnerApp = appType === "owner" || dbUser?.role === 'hostel_owner';
   
   return (
     <nav className={cn(
@@ -32,7 +32,7 @@ export default function Navbar() {
             "text-xl font-extrabold tracking-tight",
             isOwnerApp ? "text-white" : "text-slate-900"
           )}>
-            Hostel<span className={cn("font-normal", isOwnerApp ? "text-orange-500" : "text-slate-500")}>Uganda</span>
+            KAJU<span className={cn("font-normal", isOwnerApp ? "text-orange-500" : "text-slate-500")}>HOUSING</span>
           </span>
         </Link>
         
@@ -62,7 +62,7 @@ export default function Navbar() {
         {/* Right Side Search & Auth (Desktop) */}
         <div className="hidden lg:flex items-center space-x-4 ml-auto">
           {/* Search Input - Only for students */}
-          {!isOwnerApp && (
+          {(!isOwnerApp && appType !== "admin") && (
             <div className="relative w-64 group">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 group-focus-within:text-primary transition-colors" />
               <Input 

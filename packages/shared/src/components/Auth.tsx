@@ -109,12 +109,12 @@ export default function Auth({
           >
             <Building2 className="h-6 w-6 text-white" />
           </div>
-          <span className="text-3xl font-black tracking-tighter uppercase">
+          <span className="text-3xl font-black tracking-tighter text-white">
             {appType === "owner"
-              ? "UniNest_Partners"
+              ? "KAJU_HOUSING_PARTNERS"
               : appType === "admin"
-                ? "UniNest_Admin"
-                : "UniNest"}
+                ? "KAJU_HOUSING_ADMIN"
+                : "KAJU_HOUSING"}
           </span>
         </div>
         <div className="relative z-20 mt-auto">
@@ -323,7 +323,7 @@ export default function Auth({
                     }
                   >
                     {isOwner
-                      ? "Join the UniNest partner network."
+                      ? "Join the Kaju Housing partner network."
                       : "Enter your details below to create your account."}
                   </CardDescription>
                 </CardHeader>

@@ -424,7 +424,7 @@ export default function StudentDashboard() {
                <ol className="list-decimal pl-5 space-y-2">
                  <li>Dial <strong>*165#</strong> (MTN) or <strong>*185#</strong> (Airtel)</li>
                  <li>Select <strong>Send Money</strong></li>
-                 <li>Enter UniNest Uganda Merchant Number: <strong className="text-slate-900 font-mono text-base">0700 123 456</strong></li>
+                 <li>Enter KAJU HOUSING Merchant Number: <strong className="text-slate-900 font-mono text-base">0700 123 456</strong></li>
                  <li>Enter the exact amount shown above.</li>
                  <li>Confirm with your PIN.</li>
                </ol>

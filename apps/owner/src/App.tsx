@@ -11,7 +11,7 @@ export default function App() {
     <BrowserRouter>
       <AuthProvider>
         <div className="flex flex-col min-h-screen dark bg-slate-950">
-          <Navbar />
+          <Navbar appType="owner" />
           <main className="flex-grow">
             <Routes>
               <Route

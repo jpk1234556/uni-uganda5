@@ -54,7 +54,7 @@ export default function AdminSidebar() {
             <ShieldCheck className="h-5 w-5" />
           </div>
           <div className="flex flex-col">
-            <span className="font-bold text-sm text-white leading-tight tracking-widest uppercase">UniNest_Admin</span>
+            <span className="font-bold text-sm text-white leading-tight tracking-widest uppercase">KAJU_HOUSING_ADMIN</span>
             <span className="text-[10px] text-slate-500 font-mono tracking-tighter">v2.4.0_STABLE</span>
           </div>
         </div>
