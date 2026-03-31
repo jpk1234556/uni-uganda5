@@ -75,7 +75,7 @@ export default function Footer() {
               </li>
               <li className="flex items-center gap-3 text-slate-300">
                 <Mail className="h-5 w-5 text-primary shrink-0" />
-                <span>info@hosteluganda.ug</span>
+                <span>info@kajuhousing.com</span>
               </li>
             </ul>
           </div>
@@ -86,7 +86,7 @@ export default function Footer() {
       {/* Bottom Legal Bar */}
       <div className="border-t border-slate-800 bg-[#0B1120]">
         <div className="container mx-auto px-4 lg:px-8 py-6 flex flex-col md:flex-row justify-between items-center gap-4 text-xs font-medium">
-          <p>&copy; {new Date().getFullYear()} HostelUganda. All rights reserved.</p>
+          <p>&copy; {new Date().getFullYear()} KAJU HOUSING. All rights reserved.</p>
           <div className="flex gap-6">
             <Link to="#" className="hover:text-white transition-colors">Privacy Policy</Link>
             <Link to="#" className="hover:text-white transition-colors">Terms of Service</Link>

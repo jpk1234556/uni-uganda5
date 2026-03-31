@@ -178,7 +178,7 @@ export default function Home() {
           {/* Trusted By Stats */}
           <motion.div {...fadeInUp} className="text-center mb-10">
             <h2 className="text-2xl md:text-3xl font-extrabold text-white mb-3 tracking-tight">Trusted by Thousands</h2>
-            <p className="text-slate-400 font-medium">Join the growing community of students and hostel owners using HostelUganda</p>
+            <p className="text-slate-400 font-medium">Join the growing community of students and hostel owners using KAJU HOUSING</p>
           </motion.div>
 
           {/* Staggered Stat Items */}
@@ -337,13 +337,13 @@ export default function Home() {
           <motion.div {...fadeInUp}>
             <h2 className="text-3xl md:text-5xl font-extrabold text-slate-900 mb-5 tracking-tight">What Students Say</h2>
             <p className="text-slate-600 max-w-2xl mx-auto mb-20 font-medium text-lg">
-              Join thousands of satisfied students who found their perfect home through HostelUganda
+              Join thousands of satisfied students who found their perfect home through KAJU HOUSING
             </p>
           </motion.div>
 
           <motion.div {...staggerContainer} className="grid grid-cols-1 md:grid-cols-3 gap-8 text-left">
             {[
-              { name: "Nakamya Sarah", role: "Medical Student, Makerere", review: "HostelUganda made my hostel search incredibly easy. I found a perfect room near Mulago Hospital within my budget. The verification system gave me confidence.", img: "1" },
+              { name: "Nakamya Sarah", role: "Medical Student, Makerere", review: "KAJU HOUSING made my hostel search incredibly easy. I found a perfect room near Mulago Hospital within my budget. The verification system gave me confidence.", img: "1" },
               { name: "Okello James", role: "Engineering Student, Kyambogo", review: "As a first-year student from Gulu, I was worried about finding accommodation in Kampala. This platform helped me find a great hostel in Banda with all amenities.", img: "11" },
               { name: "Aisha Nambi", role: "Business Student, MUBS", review: "The booking process was seamless! I applied online and got confirmed instantly. The photos were accurate and the reviews from other students were very helpful.", img: "5" }
             ].map((testimonial, i) => (

@@ -45,7 +45,7 @@ export default function Footer() {
                 <span>+256 700 123 456</span>
               </li>
               <li className="flex items-center gap-2">
-                <span>info@hosteluganda.ug</span>
+                <span>info@kajuhousing.com</span>
               </li>
             </ul>
           </div>

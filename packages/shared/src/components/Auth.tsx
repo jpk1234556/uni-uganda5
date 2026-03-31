@@ -133,7 +133,7 @@ export default function Auth({
                 ? "Join the network of elite property owners providing premium student accommodation across Uganda. Scale your operations with our mission-critical management suite."
                 : appType === "admin"
                   ? "Secure portal for platform administration and system oversight."
-                  : '"HostelUganda completely changed how I found my accommodation for the semester. No more getting scammed or walking around under the sun for hours looking for hostels."'}
+                  : '"KAJU HOUSING completely changed how I found my accommodation for the semester. No more getting scammed or walking around under the sun for hours looking for hostels."'}
             </p>
             {appType === "student" && (
               <footer className="text-sm opacity-70">
