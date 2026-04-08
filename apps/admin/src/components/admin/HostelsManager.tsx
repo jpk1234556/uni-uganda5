@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -269,6 +269,8 @@ export default function HostelsManager() {
     }
   };
 
+  const triggerRef = useRef<HTMLButtonElement>(null);
+
   return (
     <>
       <motion.div 
@@ -302,7 +304,10 @@ export default function HostelsManager() {
             </select>
           </div>
 
-          <Button onClick={() => setIsCreateDialogOpen(true)} className="gap-2 bg-primary hover:bg-primary/90 text-white text-sm font-bold rounded-xl transition-all h-10 px-6 shadow-sm">
+          <Button onClick={() => {
+            setIsCreateDialogOpen(true);
+            setTimeout(() => triggerRef.current?.click(), 0);
+          }} className="gap-2 bg-primary hover:bg-primary/90 text-white text-sm font-bold rounded-xl transition-all h-10 px-6 shadow-sm">
             <Plus className="h-4 w-4" /> Register New Property
           </Button>
       </div>
@@ -408,6 +413,7 @@ export default function HostelsManager() {
             setNewHostel({ name: "", university: "", address: "", description: "", price_range: "", images: "", amenities: "", owner_id: "" });
           }
         }}>
+        <DialogTrigger ref={triggerRef} style={{ display: "none" }} />
         <DialogContent className="sm:max-w-[600px] rounded-2xl border-0 shadow-2xl bg-white">
           <DialogHeader className="border-b border-slate-100 pb-4 bg-slate-50 -mx-6 px-6 -mt-6 pt-6 rounded-t-2xl relative">
             <DialogTitle className="flex items-center gap-2 text-xl font-bold text-slate-900 tracking-tight">
