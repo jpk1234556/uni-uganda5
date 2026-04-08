@@ -15,7 +15,7 @@ import { motion } from "motion/react";
 import { cn } from "@/lib/utils";
 
 export default function HostelsManager() {
-  const { user } = useAuth();
+  const { user, dbUser } = useAuth();
   
   const [hostels, setHostels] = useState<any[]>([]);
   const [owners, setOwners] = useState<any[]>([]);
@@ -111,6 +111,19 @@ export default function HostelsManager() {
     e.preventDefault();
     try {
       setIsCreating(true);
+
+      if (!user?.id) {
+        throw new Error("Your session is not ready. Please sign in again and retry.");
+      }
+
+      if (dbUser?.role && dbUser.role !== "super_admin") {
+        throw new Error("Only super admins can register hostels.");
+      }
+
+      const ownerId = (newHostel.owner_id || user.id || "").trim();
+      if (!ownerId) {
+        throw new Error("Please assign an owner before creating the hostel.");
+      }
       
       const imagesArray = newHostel.images
         ? newHostel.images.split(",").map(i => i.trim()).filter(Boolean)
@@ -130,7 +143,7 @@ export default function HostelsManager() {
           price_range: newHostel.price_range,
           images: imagesArray,
           amenities: amenitiesArray,
-          owner_id: newHostel.owner_id || user?.id, // Use selected owner or fallback to admin
+          owner_id: ownerId,
           status: "approved" // Auto-approve since admin creates it
         }).select().single();
 
@@ -144,7 +157,24 @@ export default function HostelsManager() {
       fetchHostels();
     } catch (error: any) {
       console.error(error);
-      toast.error(error.message || "Failed to create property. Check constraints.");
+
+      const code = error?.code as string | undefined;
+      const message = (error?.message || "").toString();
+      const details = (error?.details || "").toString();
+
+      let friendly = "Failed to create property. Please verify all required fields and permissions.";
+
+      if (code === "42501" || /row-level security|permission denied/i.test(message)) {
+        friendly = "Create denied by database permissions. Your account must be super_admin to register hostels.";
+      } else if (code === "23503" || /hostels_owner_id_fkey|foreign key/i.test(message + details)) {
+        friendly = "Owner profile is invalid or missing. Pick a valid owner from the list or repair the admin user profile in public.users.";
+      } else if (code === "23502" || /null value/i.test(message)) {
+        friendly = "A required hostel field is missing. Fill all required fields and try again.";
+      } else if (message) {
+        friendly = message;
+      }
+
+      toast.error(friendly);
     } finally {
       setIsCreating(false);
     }
