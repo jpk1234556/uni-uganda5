@@ -4,7 +4,7 @@ import { Input } from "@/components/ui/input";
 import { Link } from "react-router-dom";
 import { supabase } from "@/lib/supabase";
 import type { Hostel } from "@/types";
-import { motion } from "framer-motion";
+import { motion } from "motion/react";
 import { 
   MapPin, 
   Search, 

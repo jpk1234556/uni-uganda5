@@ -27,11 +27,23 @@ export default function Navbar() {
       <div className="container mx-auto px-4 h-16 flex items-center justify-between">
         <div className="flex items-center gap-8">
           <Link to="/" className="flex items-center gap-2">
-            <span className="text-2xl font-bold text-primary italic">Uni-Nest</span>
+            <span className="text-2xl font-bold text-primary italic">
+              Uni-Nest
+            </span>
           </Link>
           <div className="hidden md:flex items-center gap-6">
-            <Link to="/search" className="text-sm font-medium hover:text-primary">Search</Link>
-            <Link to="/roommates" className="text-sm font-medium hover:text-primary">Roommates</Link>
+            <Link
+              to="/search"
+              className="text-sm font-medium hover:text-primary"
+            >
+              Search
+            </Link>
+            <Link
+              to="/roommates"
+              className="text-sm font-medium hover:text-primary"
+            >
+              Roommates
+            </Link>
           </div>
         </div>
 
@@ -40,8 +52,13 @@ export default function Navbar() {
             <DropdownMenu>
               <DropdownMenuTrigger className="relative h-10 w-10 rounded-full">
                 <Avatar className="h-10 w-10">
-                  <AvatarImage src={user.user_metadata?.avatar_url} alt={dbUser?.first_name} />
-                  <AvatarFallback>{dbUser?.first_name?.[0] || user.email?.[0]}</AvatarFallback>
+                  <AvatarImage
+                    src={user.user_metadata?.avatar_url}
+                    alt={dbUser?.first_name}
+                  />
+                  <AvatarFallback>
+                    {dbUser?.first_name?.[0] || user.email?.[0]}
+                  </AvatarFallback>
                 </Avatar>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-56">
