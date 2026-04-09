@@ -6,7 +6,7 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, Di
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Loader2, Trash2, MapPin, Plus, Image as ImageIcon, Building2, LayoutPanelLeft } from "lucide-react";
+import { Loader2, Trash2, MapPin, Plus, Image as ImageIcon, Building2, LayoutPanelLeft, Edit, ExternalLink, Eye } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/context/AuthContext";
 import { toast } from "sonner";
@@ -24,6 +24,7 @@ export default function HostelsManager() {
   // Create Property State
   const [isCreating, setIsCreating] = useState(false);
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
+  const [isEditingHostel, setIsEditingHostel] = useState(false);
   
   // Wizard state additions
   const [wizardStep, setWizardStep] = useState<1 | 2 | 3>(1);
@@ -48,6 +49,7 @@ export default function HostelsManager() {
   const [isRoomDialogOpen, setIsRoomDialogOpen] = useState(false);
   const [isLoadingRooms, setIsLoadingRooms] = useState(false);
   const [newRoom, setNewRoom] = useState({ name: "", price: "", capacity: "", description: "", images: "" });
+  const [editingRoomId, setEditingRoomId] = useState<string | null>(null);
 
   useEffect(() => { 
     fetchHostels(); 
@@ -95,7 +97,7 @@ export default function HostelsManager() {
       setIsLoading(true);
       const { data, error } = await supabase
         .from("hostels")
-        .select(`*, users!hostels_owner_id_fkey(first_name, last_name, email)`)
+        .select(`*, users(first_name, last_name, email)`)
         .order("created_at", { ascending: false });
         
       if (error) throw error;
@@ -107,35 +109,21 @@ export default function HostelsManager() {
     }
   };
 
-  const handleCreateProperty = async (e: React.FormEvent) => {
+  const handleSaveProperty = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
       setIsCreating(true);
 
-      if (!user?.id) {
-        throw new Error("Your session is not ready. Please sign in again and retry.");
-      }
-
-      if (dbUser?.role && dbUser.role !== "super_admin") {
-        throw new Error("Only super admins can register hostels.");
-      }
+      if (!user?.id) throw new Error("Your session is not ready. Please sign in again and retry.");
+      if (dbUser?.role && dbUser.role !== "super_admin") throw new Error("Only super admins can manage hostels.");
 
       const ownerId = (newHostel.owner_id || user.id || "").trim();
-      if (!ownerId) {
-        throw new Error("Please assign an owner before creating the hostel.");
-      }
+      if (!ownerId) throw new Error("Please assign an owner.");
       
-      const imagesArray = newHostel.images
-        ? newHostel.images.split(",").map(i => i.trim()).filter(Boolean)
-        : [];
-      
-      const amenitiesArray = newHostel.amenities
-        ? newHostel.amenities.split(",").map(a => a.trim()).filter(Boolean)
-        : [];
+      const imagesArray = newHostel.images ? newHostel.images.split(",").map(i => i.trim()).filter(Boolean) : [];
+      const amenitiesArray = newHostel.amenities ? newHostel.amenities.split(",").map(a => a.trim()).filter(Boolean) : [];
 
-      const { data, error } = await supabase
-        .from("hostels")
-        .insert({
+      const payload = {
           name: newHostel.name,
           university: newHostel.university,
           address: newHostel.address,
@@ -144,36 +132,33 @@ export default function HostelsManager() {
           images: imagesArray,
           amenities: amenitiesArray,
           owner_id: ownerId,
-          status: "approved" // Auto-approve since admin creates it
-        }).select().single();
+          status: "approved"
+      };
 
-      if (error) {
-        console.error("Super admin property insertion failed:", error);
-        throw error;
+      if (isEditingHostel && createdHostelId) {
+        const { error } = await supabase.from("hostels").update(payload).eq("id", createdHostelId);
+        if (error) throw error;
+        toast.success("Hostel updated successfully!");
+        setWizardStep(3);
+        fetchHostels();
+      } else {
+        const { data, error } = await supabase.from("hostels").insert(payload).select().single();
+        if (error) throw error;
+        toast.success("Hostel created! Now configure the rooms.");
+        setCreatedHostelId(data.id);
+        setWizardStep(3);
+        fetchHostels();
       }
-      toast.success("Hostel saved! Now configure the rooms.");
-      setCreatedHostelId(data.id);
-      setWizardStep(3);
-      fetchHostels();
     } catch (error: any) {
       console.error(error);
-
       const code = error?.code as string | undefined;
       const message = (error?.message || "").toString();
       const details = (error?.details || "").toString();
-
-      let friendly = "Failed to create property. Please verify all required fields and permissions.";
-
-      if (code === "42501" || /row-level security|permission denied/i.test(message)) {
-        friendly = "Create denied by database permissions. Your account must be super_admin to register hostels.";
-      } else if (code === "23503" || /hostels_owner_id_fkey|foreign key/i.test(message + details)) {
-        friendly = "Owner profile is invalid or missing. Pick a valid owner from the list or repair the admin user profile in public.users.";
-      } else if (code === "23502" || /null value/i.test(message)) {
-        friendly = "A required hostel field is missing. Fill all required fields and try again.";
-      } else if (message) {
-        friendly = message;
-      }
-
+      let friendly = "Failed to save property. Please verify all required fields and permissions.";
+      if (code === "42501" || /row-level security|permission denied/i.test(message)) friendly = "Action denied by database permissions. Your account must be super_admin to manage hostels.";
+      else if (code === "23503" || /hostels_owner_id_fkey|foreign key/i.test(message + details)) friendly = "Owner profile is invalid or missing. Pick a valid owner from the list or repair the admin user profile in public.users.";
+      else if (code === "23502" || /null value/i.test(message)) friendly = "A required hostel field is missing. Fill all required fields and try again.";
+      else if (message) friendly = message;
       toast.error(friendly);
     } finally {
       setIsCreating(false);
@@ -200,6 +185,23 @@ export default function HostelsManager() {
     } catch (error) {
       toast.error("Failed to delete hostel");
     }
+  };
+
+  const openEditHostel = (hostel: any) => {
+    setIsEditingHostel(true);
+    setCreatedHostelId(hostel.id);
+    setNewHostel({
+      name: hostel.name || "",
+      university: hostel.university || "",
+      address: hostel.address || "",
+      description: hostel.description || "",
+      price_range: hostel.price_range || "",
+      images: (hostel.images || []).join(", "),
+      amenities: (hostel.amenities || []).join(", "),
+      owner_id: hostel.owner_id || ""
+    });
+    setWizardStep(2);
+    setIsCreateDialogOpen(true);
   };
 
   const filteredHostels = hostels.filter(h => 
@@ -232,28 +234,35 @@ export default function HostelsManager() {
     }
   };
 
-  const handleAddRoom = async (e: React.FormEvent, targetHostelId?: string) => {
+  const handleSaveRoom = async (e: React.FormEvent, targetHostelId?: string) => {
     e.preventDefault();
     const hId = targetHostelId || selectedHostel?.id;
     if (!hId) return;
     try {
       const roomImagesArray = newRoom.images ? newRoom.images.split(",").map(i => i.trim()).filter(Boolean) : [];
-      
-      const { error } = await supabase.from("room_types").insert({
-        hostel_id: hId,
+      const payload = {
         name: newRoom.name,
         price: parseFloat(newRoom.price),
         capacity: parseInt(newRoom.capacity),
         available: parseInt(newRoom.capacity),
         description: newRoom.description || null,
         images: roomImagesArray.length > 0 ? roomImagesArray : null
-      });
-      if (error) throw error;
-      toast.success("Room type added");
+      };
+
+      if (editingRoomId) {
+         const { error } = await supabase.from("room_types").update(payload).eq("id", editingRoomId);
+         if (error) throw error;
+         toast.success("Room type updated");
+      } else {
+         const { error } = await supabase.from("room_types").insert({ hostel_id: hId, ...payload });
+         if (error) throw error;
+         toast.success("Room type added");
+      }
+      setEditingRoomId(null);
       setNewRoom({ name: "", price: "", capacity: "", description: "", images: "" });
       fetchRooms(hId);
     } catch (error: any) {
-      toast.error("Failed to add room: " + error.message);
+      toast.error("Failed to save room: " + error.message);
     }
   };
 
@@ -375,7 +384,7 @@ export default function HostelsManager() {
                         
                         <Button 
                           variant="outline" 
-                          className="h-8 text-xs font-semibold text-primary border-slate-200 hover:border-primary hover:bg-primary/5 rounded-lg px-3"
+                          className="h-8 text-xs font-semibold text-primary border-slate-200 hover:border-primary hover:bg-primary/5 rounded-lg px-2"
                           onClick={(e) => {
                             e.preventDefault();
                             e.stopPropagation();
@@ -383,7 +392,15 @@ export default function HostelsManager() {
                             setIsRoomDialogOpen(true);
                           }}
                         >
-                          <LayoutPanelLeft className="h-4 w-4 mr-1.5" /> Rooms
+                          <LayoutPanelLeft className="h-4 w-4 sm:mr-1.5" /> <span className="hidden sm:inline">Rooms</span>
+                        </Button>
+                        
+                        <Button variant="ghost" className="h-8 w-8 p-0 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg" onClick={() => window.open(`/hostel/${hostel.id}`, "_blank")}>
+                           <Eye className="h-4 w-4" />
+                        </Button>
+
+                        <Button variant="ghost" className="h-8 w-8 p-0 text-slate-400 hover:text-primary hover:bg-primary/10 rounded-lg" onClick={() => openEditHostel(hostel)}>
+                           <Edit className="h-4 w-4" />
                         </Button>
 
                         <Button onClick={() => {
@@ -410,6 +427,7 @@ export default function HostelsManager() {
           if (!open) {
             setWizardStep(1);
             setCreatedHostelId(null);
+            setIsEditingHostel(false);
             setNewHostel({ name: "", university: "", address: "", description: "", price_range: "", images: "", amenities: "", owner_id: "" });
           }
         }}>
@@ -487,7 +505,7 @@ export default function HostelsManager() {
             )}
 
             {wizardStep === 2 && (
-              <form onSubmit={handleCreateProperty} className="space-y-4">
+              <form onSubmit={handleSaveProperty} className="space-y-4">
                 <div className="space-y-2">
                   <Label htmlFor="name" className="text-sm font-semibold text-slate-700">Hostel Name</Label>
                   <Input id="name" required value={newHostel.name} onChange={(e) => setNewHostel({...newHostel, name: e.target.value})} placeholder="e.g. City Gateway Hostel" className="rounded-xl border-slate-200 text-sm h-11 bg-white shadow-sm" />
@@ -522,7 +540,7 @@ export default function HostelsManager() {
                   </Button>
                   <Button type="submit" disabled={isCreating} className="w-2/3 bg-primary hover:bg-primary/90 text-white text-sm font-bold rounded-xl h-11 shadow-sm transition-transform hover:scale-[1.02]">
                     {isCreating ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
-                    Commit to Registry
+                    {isEditingHostel ? "Update Registry" : "Commit to Registry"}
                   </Button>
                 </DialogFooter>
               </form>
@@ -542,7 +560,19 @@ export default function HostelsManager() {
                               <TableCell className="text-xs text-slate-600">{room.price.toLocaleString()} UGX</TableCell>
                               <TableCell className="text-xs text-slate-600">Cap:{room.capacity}</TableCell>
                               <TableCell className="text-right">
-                                <Button onClick={() => handleDeleteRoom(room.id)} variant="ghost" className="h-7 w-7 p-0 text-rose-500 hover:bg-rose-100 rounded-lg">
+                                <Button type="button" onClick={() => {
+                                  setEditingRoomId(room.id);
+                                  setNewRoom({
+                                    name: room.name || "",
+                                    price: room.price?.toString() || "",
+                                    capacity: room.capacity?.toString() || "",
+                                    description: room.description || "",
+                                    images: (room.images || []).join(", ")
+                                  });
+                                }} variant="ghost" className="h-7 w-7 p-0 text-slate-400 hover:text-primary hover:bg-primary/10 rounded-lg mr-1">
+                                  <Edit className="h-4 w-4" />
+                                </Button>
+                                <Button type="button" onClick={() => handleDeleteRoom(room.id)} variant="ghost" className="h-7 w-7 p-0 text-rose-500 hover:bg-rose-100 rounded-lg">
                                   <Trash2 className="h-4 w-4" />
                                 </Button>
                               </TableCell>
@@ -564,7 +594,7 @@ export default function HostelsManager() {
                       Preset: Double
                     </Button>
                   </div>
-                  <form onSubmit={(e) => createdHostelId && handleAddRoom(e, createdHostelId)} className="space-y-4">
+                  <form onSubmit={(e) => createdHostelId && handleSaveRoom(e, createdHostelId)} className="space-y-4">
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                       <div className="space-y-1">
                         <Label className="text-xs font-semibold text-slate-700">Type Label</Label>
@@ -581,9 +611,15 @@ export default function HostelsManager() {
                         </div>
                       </div>
                     </div>
-                    <div className="flex justify-end pt-2">
+                    <div className="flex justify-end pt-2 gap-2">
+                      {editingRoomId && (
+                        <Button type="button" variant="ghost" onClick={() => {
+                          setEditingRoomId(null);
+                          setNewRoom({ name: "", price: "", capacity: "", description: "", images: "" });
+                        }} className="text-slate-600 h-9 rounded-lg px-4 hover:bg-slate-100">Cancel</Button>
+                      )}
                       <Button type="submit" className="bg-primary hover:bg-primary/90 text-white text-xs font-bold rounded-lg h-9 px-5 shadow-sm transition-transform hover:scale-[1.02]">
-                        <Plus className="h-4 w-4 mr-1.5" /> Add Room Type
+                        <Plus className="h-4 w-4 mr-1.5" /> {editingRoomId ? "Update Type" : "Add Room Type"}
                       </Button>
                     </div>
                   </form>
@@ -633,6 +669,18 @@ export default function HostelsManager() {
                           <TableCell className="text-sm font-medium text-slate-600">{Number(room.price || 0).toLocaleString()} UGX</TableCell>
                           <TableCell className="text-sm font-medium text-slate-600">{room.capacity || 1} Beds</TableCell>
                           <TableCell className="text-right">
+                            <Button type="button" onClick={() => {
+                                setEditingRoomId(room.id);
+                                setNewRoom({
+                                  name: room.name || "",
+                                  price: room.price?.toString() || "",
+                                  capacity: room.capacity?.toString() || "",
+                                  description: room.description || "",
+                                  images: (room.images || []).join(", ")
+                                });
+                            }} variant="ghost" className="text-slate-400 hover:text-primary hover:bg-primary/10 p-0 h-8 w-8 rounded-lg mr-1">
+                               <Edit className="h-4 w-4" />
+                            </Button>
                             <Button onClick={() => handleDeleteRoom(room.id)} variant="ghost" className="text-slate-400 hover:text-rose-600 hover:bg-rose-50 p-0 h-8 w-8 rounded-lg">
                                <Trash2 className="h-4 w-4" />
                             </Button>
@@ -647,7 +695,7 @@ export default function HostelsManager() {
 
             <div className="border border-slate-200 bg-slate-50 rounded-2xl p-6 shadow-sm">
               <h4 className="text-sm font-bold text-slate-900 mb-4">Add New Inventory Unit</h4>
-              <form onSubmit={handleAddRoom} className="space-y-4">
+              <form onSubmit={handleSaveRoom} className="space-y-4">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-4">
                   <div className="space-y-1.5">
                     <Label className="text-xs font-semibold text-slate-700">Unit Label</Label>
@@ -670,9 +718,17 @@ export default function HostelsManager() {
                     <Textarea value={newRoom.description} onChange={e => setNewRoom({...newRoom, description: e.target.value})} placeholder="Describe specific unit features..." className="bg-white rounded-lg border-slate-200 text-sm resize-none h-24 shadow-sm focus:ring-primary focus:border-primary" />
                   </div>
                 </div>
-                <div className="flex justify-end pt-4 border-t border-slate-200 mt-4">
+                <div className="flex justify-end pt-4 border-t border-slate-200 mt-4 gap-3">
+                   {editingRoomId && (
+                     <Button type="button" variant="ghost" onClick={() => {
+                        setEditingRoomId(null);
+                        setNewRoom({ name: "", price: "", capacity: "", description: "", images: "" });
+                     }} className="text-slate-600 text-sm font-bold rounded-xl h-11 px-6 hover:bg-slate-100">
+                       Cancel Action
+                     </Button>
+                   )}
                    <Button type="submit" className="bg-primary hover:bg-primary/90 text-white text-sm font-bold rounded-xl h-11 px-6 shadow-sm gap-2 transition-transform hover:scale-[1.02]">
-                     <Plus className="h-4 w-4" /> Add Unit
+                     <Plus className="h-4 w-4" /> {editingRoomId ? "Update Inventory Unit" : "Add Unit"}
                    </Button>
                 </div>
               </form>
