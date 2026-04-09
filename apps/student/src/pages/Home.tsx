@@ -5,6 +5,7 @@ import { Link } from "react-router-dom";
 import { supabase } from "@/lib/supabase";
 import type { Hostel } from "@/types";
 import { motion } from "motion/react";
+import studentBackground from "../../../../images/e0901fce5aa5c561965db8d07c519a71.jpg";
 import { 
   MapPin, 
   Search, 
@@ -108,7 +109,12 @@ export default function Home() {
     <div className="flex flex-col min-h-screen">
       
       {/* 1. DARK SECTION: Hero & Stats */}
-      <section className="dark bg-pattern-dark pt-20 pb-24 border-b border-white/5 relative overflow-hidden">
+      <section
+        className="dark pt-20 pb-24 border-b border-white/5 relative overflow-hidden bg-cover bg-center bg-no-repeat"
+        style={{
+          backgroundImage: `linear-gradient(rgba(15, 23, 42, 0.84), rgba(15, 23, 42, 0.78)), url(${studentBackground})`,
+        }}
+      >
         {/* Glow Effects */}
         <div className="absolute top-0 -left-20 w-72 h-72 bg-primary/20 rounded-full blur-[100px] opacity-50 pointer-events-none" />
         <div className="absolute top-40 right-10 w-96 h-96 bg-primary/10 rounded-full blur-[100px] opacity-50 pointer-events-none" />
