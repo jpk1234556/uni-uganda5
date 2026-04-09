@@ -24,7 +24,6 @@ import {
   DialogDescription,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
   DialogFooter,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
@@ -111,6 +110,9 @@ export default function OwnerDashboard() {
   const [isRoomDialogOpen, setIsRoomDialogOpen] = useState(false);
   const [isLoadingRooms, setIsLoadingRooms] = useState(false);
   const [newRoom, setNewRoom] = useState({ name: "", price: "", capacity: "" });
+  const roomFileInputRef = useRef<HTMLInputElement>(null);
+  const [isRoomDragActive, setIsRoomDragActive] = useState(false);
+  const [selectedRoomImageDataUrls, setSelectedRoomImageDataUrls] = useState<string[]>([]);
   const triggerRef = useRef<HTMLButtonElement>(null);
 
   const fetchData = useCallback(async () => {
@@ -241,19 +243,23 @@ export default function OwnerDashboard() {
             .filter(Boolean)
         : [];
 
-      const { data, error } = await supabase.from("hostels").insert({
-        name: newHostel.name,
-        university: newHostel.university,
-        address: newHostel.address,
-        description: newHostel.description,
-        price_range: newHostel.price_range,
-        images: imagesArray,
-        owner_id: user?.id,
-        status: "pending",
-      }).select().single();
+      const { data, error } = await supabase
+        .from("hostels")
+        .insert({
+          name: newHostel.name,
+          university: newHostel.university,
+          address: newHostel.address,
+          description: newHostel.description,
+          price_range: newHostel.price_range,
+          images: imagesArray,
+          owner_id: user?.id,
+          status: "pending",
+        })
+        .select()
+        .single();
 
       if (error) throw error;
-      toast.success("Property saved! Now, let's configure your rooms.");
+      toast.success("Property submitted for super admin approval. Now, let's configure your rooms.");
       setCreatedHostelId(data.id);
       setWizardStep(3);
       fetchData();
@@ -264,21 +270,58 @@ export default function OwnerDashboard() {
     }
   };
 
+  const readFileAsDataUrl = (file: File): Promise<string> =>
+    new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(String(reader.result || ""));
+      reader.onerror = () => reject(new Error(`Failed to read ${file.name}`));
+      reader.readAsDataURL(file);
+    });
+
+  const handleIncomingRoomFiles = async (incoming: FileList | null) => {
+    if (!incoming || incoming.length === 0) return;
+
+    const files = Array.from(incoming);
+    const imageFiles = files.filter((file) => file.type.startsWith("image/"));
+
+    if (imageFiles.length !== files.length) {
+      toast.error("Only image files are allowed.");
+    }
+
+    if (imageFiles.length === 0) return;
+
+    if (selectedRoomImageDataUrls.length + imageFiles.length > 8) {
+      toast.error("You can attach up to 8 images per room.");
+      return;
+    }
+
+    try {
+      const encoded = await Promise.all(imageFiles.map(readFileAsDataUrl));
+      setSelectedRoomImageDataUrls((prev) => [...prev, ...encoded]);
+      toast.success(`${imageFiles.length} room image(s) attached.`);
+    } catch (error) {
+      toast.error("Failed to process selected room image files.");
+    }
+  };
+
   const handleAddRoom = async (e: React.FormEvent, targetHostelId?: string) => {
     e.preventDefault();
     const hId = targetHostelId || selectedHostel?.id;
     if (!hId) return;
     try {
+      const roomImagesArray = [...selectedRoomImageDataUrls];
       const { error } = await supabase.from("room_types").insert({
         hostel_id: hId,
         name: newRoom.name,
         price: parseFloat(newRoom.price),
         capacity: parseInt(newRoom.capacity),
         available: parseInt(newRoom.capacity), // Initial available is capacity
+        images: roomImagesArray.length > 0 ? roomImagesArray : null,
       });
       if (error) throw error;
       toast.success("Room type added");
       setNewRoom({ name: "", price: "", capacity: "" });
+      setSelectedRoomImageDataUrls([]);
       fetchRooms(hId);
     } catch (error: unknown) {
       toast.error(
@@ -361,28 +404,49 @@ export default function OwnerDashboard() {
               Property Dashboard
             </h1>
             <p className="text-slate-500 text-sm mt-1">
-              Manage your hostel listings, bookings, and revenue from one powerful dashboard.
+              Manage your hostel listings, bookings, and revenue from one
+              powerful dashboard.
             </p>
           </div>
 
           <div className="flex items-center gap-3">
-            <Dialog open={isWizardOpen} onOpenChange={(open) => {
-              setIsWizardOpen(open);
-              if (!open) {
-                setWizardStep(1);
-                setCreatedHostelId(null);
-                setNewHostel({ name: "", university: "", address: "", description: "", price_range: "", images: "" });
-              }
-            }}>
-              <DialogTrigger asChild>
-                <Button onClick={() => {
+            <Dialog
+              open={isWizardOpen}
+              onOpenChange={(open) => {
+                setIsWizardOpen(open);
+                if (!open) {
                   setWizardStep(1);
                   setCreatedHostelId(null);
-                  setNewHostel({ name: "", university: "", address: "", description: "", price_range: "", images: "" });
-                }} className="h-12 px-6 bg-primary hover:bg-primary/90 text-white rounded-xl shadow-md transition-all font-semibold text-sm flex items-center gap-2">
-                  <Plus className="h-5 w-5" /> Add New Property
-                </Button>
-              </DialogTrigger>
+                  setNewHostel({
+                    name: "",
+                    university: "",
+                    address: "",
+                    description: "",
+                    price_range: "",
+                    images: "",
+                  });
+                }
+              }}
+            >
+              <Button
+                type="button"
+                onClick={() => {
+                  setWizardStep(1);
+                  setCreatedHostelId(null);
+                  setNewHostel({
+                    name: "",
+                    university: "",
+                    address: "",
+                    description: "",
+                    price_range: "",
+                    images: "",
+                  });
+                  setIsWizardOpen(true);
+                }}
+                className="h-12 px-6 bg-primary hover:bg-primary/90 text-white rounded-xl shadow-md transition-all font-semibold text-sm flex items-center gap-2 pointer-events-auto"
+              >
+                <Plus className="h-5 w-5" /> Add New Property
+              </Button>
               <DialogContent className="sm:max-w-[600px] rounded-2xl border-0 shadow-2xl p-0 overflow-hidden bg-white">
                 <div className="bg-slate-50 border-b border-slate-100 text-slate-900 p-6 relative">
                   <DialogHeader>
@@ -392,9 +456,12 @@ export default function OwnerDashboard() {
                       {wizardStep === 3 && "Step 3: Room Setup"}
                     </DialogTitle>
                     <DialogDescription className="text-slate-500 text-base">
-                      {wizardStep === 1 && "Link this property to a nearby institution."}
-                      {wizardStep === 2 && "Enter the physical and visual details."}
-                      {wizardStep === 3 && "Configure the available room types."}
+                      {wizardStep === 1 &&
+                        "Link this property to a nearby institution."}
+                      {wizardStep === 2 &&
+                        "Enter the physical and visual details."}
+                      {wizardStep === 3 &&
+                        "Configure the available room types."}
                     </DialogDescription>
                   </DialogHeader>
                   <div className="absolute top-6 right-6 text-sm font-bold text-primary bg-primary/10 px-3 py-1 rounded-full">
@@ -404,7 +471,13 @@ export default function OwnerDashboard() {
 
                 <div className="p-6">
                   {wizardStep === 1 && (
-                    <form onSubmit={(e) => { e.preventDefault(); setWizardStep(2); }} className="space-y-6">
+                    <form
+                      onSubmit={(e) => {
+                        e.preventDefault();
+                        setWizardStep(2);
+                      }}
+                      className="space-y-6"
+                    >
                       <div className="space-y-2">
                         <Label className="text-sm font-semibold text-slate-700">
                           Affiliated University
@@ -421,7 +494,9 @@ export default function OwnerDashboard() {
                           placeholder="e.g. Makerere University"
                           className="rounded-xl border-slate-200 focus-visible:ring-primary h-12 bg-slate-50"
                         />
-                        <p className="text-xs text-slate-500 font-medium">Which university is this hostel primarily serving?</p>
+                        <p className="text-xs text-slate-500 font-medium">
+                          Which university is this hostel primarily serving?
+                        </p>
                       </div>
                       <DialogFooter>
                         <Button
@@ -445,7 +520,10 @@ export default function OwnerDashboard() {
                             required
                             value={newHostel.name}
                             onChange={(e) =>
-                              setNewHostel({ ...newHostel, name: e.target.value })
+                              setNewHostel({
+                                ...newHostel,
+                                name: e.target.value,
+                              })
                             }
                             placeholder="e.g. City Gateway Hostel"
                             className="rounded-xl border-slate-200 focus-visible:ring-primary h-12 bg-slate-50"
@@ -477,7 +555,10 @@ export default function OwnerDashboard() {
                             <Input
                               value={newHostel.images}
                               onChange={(e) =>
-                                setNewHostel({ ...newHostel, images: e.target.value })
+                                setNewHostel({
+                                  ...newHostel,
+                                  images: e.target.value,
+                                })
                               }
                               placeholder="URL1, URL2 (Comma separated)"
                               className="rounded-xl border-slate-200 focus-visible:ring-primary h-12 bg-slate-50"
@@ -547,17 +628,34 @@ export default function OwnerDashboard() {
                     <div className="space-y-6">
                       {rooms.length > 0 && (
                         <div>
-                          <h4 className="text-sm font-semibold text-slate-700 mb-3">Added Rooms</h4>
+                          <h4 className="text-sm font-semibold text-slate-700 mb-3">
+                            Added Rooms
+                          </h4>
                           <div className="max-h-[120px] overflow-y-auto border border-slate-200 rounded-xl bg-white shadow-sm">
                             <Table>
                               <TableBody>
-                                {rooms.map(room => (
-                                  <TableRow key={room.id} className="hover:bg-slate-50/50">
-                                    <TableCell className="text-xs py-2 font-bold text-slate-900">{room.name}</TableCell>
-                                    <TableCell className="text-xs py-2 text-slate-500">{formatUGX(room.price)}</TableCell>
-                                    <TableCell className="text-xs py-2 text-slate-500">Cap: {room.capacity}</TableCell>
+                                {rooms.map((room) => (
+                                  <TableRow
+                                    key={room.id}
+                                    className="hover:bg-slate-50/50"
+                                  >
+                                    <TableCell className="text-xs py-2 font-bold text-slate-900">
+                                      {room.name}
+                                    </TableCell>
+                                    <TableCell className="text-xs py-2 text-slate-500">
+                                      {formatUGX(room.price)}
+                                    </TableCell>
+                                    <TableCell className="text-xs py-2 text-slate-500">
+                                      Cap: {room.capacity}
+                                    </TableCell>
                                     <TableCell className="text-right py-2">
-                                      <Button onClick={() => handleDeleteRoom(room.id)} variant="ghost" className="h-6 w-6 p-0 text-rose-500 hover:bg-rose-50 rounded-lg">
+                                      <Button
+                                        onClick={() =>
+                                          handleDeleteRoom(room.id)
+                                        }
+                                        variant="ghost"
+                                        className="h-6 w-6 p-0 text-rose-500 hover:bg-rose-50 rounded-lg"
+                                      >
                                         <Trash2 className="h-4 w-4" />
                                       </Button>
                                     </TableCell>
@@ -570,48 +668,168 @@ export default function OwnerDashboard() {
                       )}
 
                       <div className="bg-slate-50 p-5 border border-slate-200 rounded-xl">
-                        <h4 className="text-sm font-semibold text-slate-900 mb-4">Add Room Type</h4>
-                        
+                        <h4 className="text-sm font-semibold text-slate-900 mb-4">
+                          Add Room Type
+                        </h4>
+
                         <div className="flex gap-2 mb-4">
-                          <Button 
-                            type="button" 
-                            variant="outline" 
+                          <Button
+                            type="button"
+                            variant="outline"
                             size="sm"
                             className="rounded-lg text-xs h-8 border-slate-200 font-medium text-slate-600 bg-white shadow-sm"
-                            onClick={() => setNewRoom({ ...newRoom, name: "Single Room", capacity: "1" })}
+                            onClick={() =>
+                              setNewRoom({
+                                ...newRoom,
+                                name: "Single Room",
+                                capacity: "1",
+                              })
+                            }
                           >
                             Preset: Single
                           </Button>
-                          <Button 
-                            type="button" 
-                            variant="outline" 
+                          <Button
+                            type="button"
+                            variant="outline"
                             size="sm"
                             className="rounded-lg text-xs h-8 border-slate-200 font-medium text-slate-600 bg-white shadow-sm"
-                            onClick={() => setNewRoom({ ...newRoom, name: "Double Room", capacity: "2" })}
+                            onClick={() =>
+                              setNewRoom({
+                                ...newRoom,
+                                name: "Double Room",
+                                capacity: "2",
+                              })
+                            }
                           >
                             Preset: Double
                           </Button>
                         </div>
 
-                        <form onSubmit={(e) => createdHostelId && handleAddRoom(e, createdHostelId)} className="space-y-4">
+                        <form
+                          onSubmit={(e) =>
+                            createdHostelId && handleAddRoom(e, createdHostelId)
+                          }
+                          className="space-y-4"
+                        >
                           <div className="grid grid-cols-2 gap-4">
                             <div className="space-y-1.5">
-                              <Label className="text-xs font-semibold text-slate-600">Type Label</Label>
-                              <Input required value={newRoom.name} onChange={e => setNewRoom({...newRoom, name: e.target.value})} placeholder="e.g. Single VIP" className="bg-white rounded-lg border-slate-200 h-10 shadow-sm" />
+                              <Label className="text-xs font-semibold text-slate-600">
+                                Type Label
+                              </Label>
+                              <Input
+                                required
+                                value={newRoom.name}
+                                onChange={(e) =>
+                                  setNewRoom({
+                                    ...newRoom,
+                                    name: e.target.value,
+                                  })
+                                }
+                                placeholder="e.g. Single VIP"
+                                className="bg-white rounded-lg border-slate-200 h-10 shadow-sm"
+                              />
                             </div>
                             <div className="col-span-1 grid grid-cols-1 sm:grid-cols-2 gap-2">
                               <div className="space-y-1.5">
-                                <Label className="text-xs font-semibold text-slate-600">Capacity</Label>
-                                <Input required type="number" min="1" value={newRoom.capacity} onChange={e => setNewRoom({...newRoom, capacity: e.target.value})} placeholder="1" className="bg-white rounded-lg border-slate-200 h-10 shadow-sm" />
+                                <Label className="text-xs font-semibold text-slate-600">
+                                  Capacity
+                                </Label>
+                                <Input
+                                  required
+                                  type="number"
+                                  min="1"
+                                  value={newRoom.capacity}
+                                  onChange={(e) =>
+                                    setNewRoom({
+                                      ...newRoom,
+                                      capacity: e.target.value,
+                                    })
+                                  }
+                                  placeholder="1"
+                                  className="bg-white rounded-lg border-slate-200 h-10 shadow-sm"
+                                />
                               </div>
                               <div className="space-y-1.5">
-                                <Label className="text-xs font-semibold text-slate-600">Price (UGX)</Label>
-                                <Input required type="number" min="0" value={newRoom.price} onChange={e => setNewRoom({...newRoom, price: e.target.value})} placeholder="0" className="bg-white rounded-lg border-slate-200 h-10 shadow-sm" />
+                                <Label className="text-xs font-semibold text-slate-600">
+                                  Price (UGX)
+                                </Label>
+                                <Input
+                                  required
+                                  type="number"
+                                  min="0"
+                                  value={newRoom.price}
+                                  onChange={(e) =>
+                                    setNewRoom({
+                                      ...newRoom,
+                                      price: e.target.value,
+                                    })
+                                  }
+                                  placeholder="0"
+                                  className="bg-white rounded-lg border-slate-200 h-10 shadow-sm"
+                                />
                               </div>
                             </div>
+                              <div className="space-y-1.5 sm:col-span-2">
+                                <Label className="text-xs font-semibold text-slate-700 flex items-center gap-1.5">
+                                  <ImageIcon className="h-3.5 w-3.5 text-primary" /> Room Images
+                                </Label>
+                                <input
+                                  ref={roomFileInputRef}
+                                  type="file"
+                                  accept="image/*"
+                                  multiple
+                                  className="hidden"
+                                  onChange={(e) => handleIncomingRoomFiles(e.target.files)}
+                                />
+                                <div
+                                  onDragOver={(e) => {
+                                    e.preventDefault();
+                                    setIsRoomDragActive(true);
+                                  }}
+                                  onDragLeave={() => setIsRoomDragActive(false)}
+                                  onDrop={(e) => {
+                                    e.preventDefault();
+                                    setIsRoomDragActive(false);
+                                    handleIncomingRoomFiles(e.dataTransfer.files);
+                                  }}
+                                  className={cn(
+                                    "rounded-xl border border-dashed p-3 text-center transition-colors",
+                                    isRoomDragActive ? "border-primary bg-primary/5" : "border-slate-300 bg-white",
+                                  )}
+                                >
+                                  <p className="text-xs text-slate-600 mb-2">Drag and drop room images here</p>
+                                  <Button
+                                    type="button"
+                                    variant="outline"
+                                    className="h-8 text-xs"
+                                    onClick={() => roomFileInputRef.current?.click()}
+                                  >
+                                    Choose From Files
+                                  </Button>
+                                </div>
+                                {selectedRoomImageDataUrls.length > 0 && (
+                                  <div className="grid grid-cols-4 gap-2 mt-2">
+                                    {selectedRoomImageDataUrls.map((img, idx) => (
+                                      <div key={`${idx}-${img.slice(0, 20)}`} className="relative rounded-md overflow-hidden border border-slate-200">
+                                        <img src={img} alt={`room-upload-${idx + 1}`} className="h-14 w-full object-cover" />
+                                        <button
+                                          type="button"
+                                          className="absolute top-0.5 right-0.5 h-5 w-5 rounded-full bg-black/60 text-white text-[10px]"
+                                          onClick={() => setSelectedRoomImageDataUrls((prev) => prev.filter((_, i) => i !== idx))}
+                                        >
+                                          x
+                                        </button>
+                                      </div>
+                                    ))}
+                                  </div>
+                                )}
+                              </div>
                           </div>
                           <div className="flex justify-end">
-                            <Button type="submit" className="bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold rounded-lg h-9 px-4 shadow-sm">
+                            <Button
+                              type="submit"
+                              className="bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold rounded-lg h-9 px-4 shadow-sm"
+                            >
                               <Plus className="h-4 w-4 mr-1" /> Add Room Type
                             </Button>
                           </div>
@@ -701,7 +919,10 @@ export default function OwnerDashboard() {
                 <TrendingUp className="h-5 w-5 text-emerald-500" />
               </div>
               <CardTitle className="text-3xl font-bold tracking-tight text-slate-900 mt-2">
-                13.2M <span className="text-base text-slate-500 font-medium">UGX</span>
+                13.2M{" "}
+                <span className="text-base text-slate-500 font-medium">
+                  UGX
+                </span>
               </CardTitle>
             </CardHeader>
             <CardContent className="flex-grow pt-4">
@@ -1022,7 +1243,8 @@ export default function OwnerDashboard() {
                         Financial Integration Pending
                       </h4>
                       <p className="text-sm text-slate-500 font-medium max-w-xs">
-                        Payout via Mobile Money configuration is currently in development.
+                        Payout via Mobile Money configuration is currently in
+                        development.
                       </p>
                     </div>
                   </CardContent>
@@ -1034,7 +1256,14 @@ export default function OwnerDashboard() {
       </div>
 
       {/* Manage Rooms Dialog */}
-      <Dialog open={isRoomDialogOpen} onOpenChange={setIsRoomDialogOpen}>
+      <Dialog open={isRoomDialogOpen} onOpenChange={(open) => {
+        setIsRoomDialogOpen(open);
+        if (!open) {
+          setIsRoomDragActive(false);
+          setSelectedRoomImageDataUrls([]);
+          setNewRoom({ name: "", price: "", capacity: "" });
+        }
+      }}>
         <DialogContent className="max-w-2xl max-h-[85vh] overflow-hidden p-0 rounded-2xl border-0 shadow-2xl bg-white">
           <div className="bg-slate-50 border-b border-slate-100 text-slate-900 p-6 relative">
             <DialogHeader>
@@ -1051,7 +1280,8 @@ export default function OwnerDashboard() {
             <div className="space-y-8">
               <div>
                 <h4 className="text-sm font-semibold text-slate-700 mb-4 flex items-center gap-2">
-                  <LayoutDashboard className="h-4 w-4 text-primary" /> Active Room Types
+                  <LayoutDashboard className="h-4 w-4 text-primary" /> Active
+                  Room Types
                 </h4>
                 {isLoadingRooms ? (
                   <div className="py-10 flex flex-col items-center justify-center">
@@ -1094,7 +1324,9 @@ export default function OwnerDashboard() {
                             <TableCell className="text-sm font-semibold text-slate-900">
                               {room.name}
                             </TableCell>
-                            <TableCell className="text-sm text-slate-600">{formatUGX(room.price)}</TableCell>
+                            <TableCell className="text-sm text-slate-600">
+                              {formatUGX(room.price)}
+                            </TableCell>
                             <TableCell className="text-sm text-slate-600">
                               {room.capacity}
                             </TableCell>
@@ -1118,7 +1350,8 @@ export default function OwnerDashboard() {
 
               <div className="bg-slate-50 p-6 border border-slate-200 rounded-2xl shadow-sm">
                 <h4 className="text-sm font-semibold text-slate-900 mb-4 flex items-center gap-2">
-                  <Plus className="h-4 w-4 text-primary" /> Add New Room Configuration
+                  <Plus className="h-4 w-4 text-primary" /> Add New Room
+                  Configuration
                 </h4>
                 <form
                   onSubmit={handleAddRoom}

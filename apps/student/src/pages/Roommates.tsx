@@ -1,5 +1,11 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
@@ -7,7 +13,14 @@ import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { useAuth } from "@/context/AuthContext";
 import { supabase } from "@/lib/supabase";
-import { Loader2, MapPin, Phone, Search, UserRound, Wallet } from "lucide-react";
+import {
+  Loader2,
+  MapPin,
+  Phone,
+  Search,
+  UserRound,
+  Wallet,
+} from "lucide-react";
 import { toast } from "sonner";
 
 type RoommatePost = {
@@ -62,7 +75,9 @@ export default function Roommates() {
       setIsLoading(true);
       const { data, error } = await supabase
         .from("roommate_posts")
-        .select("*, users!roommate_posts_student_id_fkey(first_name, last_name, course)")
+        .select(
+          "*, users!roommate_posts_student_id_fkey(first_name, last_name, course)",
+        )
         .eq("is_active", true)
         .order("updated_at", { ascending: false });
 
@@ -84,7 +99,9 @@ export default function Roommates() {
     } catch (error: any) {
       const message = String(error?.message || "");
       if (message.toLowerCase().includes("roommate_posts")) {
-        toast.error("Roommates module is not ready. Run phase21_roommates_marketplace.sql in Supabase first.");
+        toast.error(
+          "Roommates module is not ready. Run phase21_roommates_marketplace.sql in Supabase first.",
+        );
       } else {
         toast.error("Failed to load roommate posts");
       }
@@ -133,7 +150,8 @@ export default function Roommates() {
         university: form.university.trim(),
         preferred_location: form.preferred_location.trim() || null,
         budget_range: form.budget_range.trim() || null,
-        contact_phone: form.contact_phone.trim() || dbUser?.phone_number || null,
+        contact_phone:
+          form.contact_phone.trim() || dbUser?.phone_number || null,
         about: form.about.trim() || null,
         is_active: true,
       };
@@ -144,7 +162,9 @@ export default function Roommates() {
 
       if (error) throw error;
 
-      toast.success(myPost ? "Roommate post updated." : "Roommate post published.");
+      toast.success(
+        myPost ? "Roommate post updated." : "Roommate post published.",
+      );
       fetchPosts();
     } catch (error: any) {
       toast.error(error?.message || "Failed to save roommate post");
@@ -173,16 +193,24 @@ export default function Roommates() {
   return (
     <div className="container mx-auto px-4 py-10 max-w-7xl">
       <div className="mb-8">
-        <h1 className="text-3xl md:text-4xl font-extrabold tracking-tight text-slate-900">Find Roommates</h1>
-        <p className="text-slate-600 mt-2">Post your roommate needs and discover students searching around your university.</p>
+        <h1 className="text-3xl md:text-4xl font-extrabold tracking-tight text-slate-900">
+          Find Roommates
+        </h1>
+        <p className="text-slate-600 mt-2">
+          Post your roommate needs and discover students searching around your
+          university.
+        </p>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <Card className="lg:col-span-1 border-slate-200 shadow-sm h-fit">
           <CardHeader>
-            <CardTitle>{myPost ? "Update My Listing" : "Create My Listing"}</CardTitle>
+            <CardTitle>
+              {myPost ? "Update My Listing" : "Create My Listing"}
+            </CardTitle>
             <CardDescription>
-              Your post helps other students contact you for shared accommodation.
+              Your post helps other students contact you for shared
+              accommodation.
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -192,7 +220,9 @@ export default function Roommates() {
                 <Input
                   id="university"
                   value={form.university}
-                  onChange={(e) => setForm((prev) => ({ ...prev, university: e.target.value }))}
+                  onChange={(e) =>
+                    setForm((prev) => ({ ...prev, university: e.target.value }))
+                  }
                   placeholder="e.g. Makerere University"
                 />
               </div>
@@ -202,7 +232,12 @@ export default function Roommates() {
                 <Input
                   id="location"
                   value={form.preferred_location}
-                  onChange={(e) => setForm((prev) => ({ ...prev, preferred_location: e.target.value }))}
+                  onChange={(e) =>
+                    setForm((prev) => ({
+                      ...prev,
+                      preferred_location: e.target.value,
+                    }))
+                  }
                   placeholder="e.g. Kikoni"
                 />
               </div>
@@ -212,7 +247,12 @@ export default function Roommates() {
                 <Input
                   id="budget"
                   value={form.budget_range}
-                  onChange={(e) => setForm((prev) => ({ ...prev, budget_range: e.target.value }))}
+                  onChange={(e) =>
+                    setForm((prev) => ({
+                      ...prev,
+                      budget_range: e.target.value,
+                    }))
+                  }
                   placeholder="e.g. 400k - 700k UGX"
                 />
               </div>
@@ -222,7 +262,12 @@ export default function Roommates() {
                 <Input
                   id="phone"
                   value={form.contact_phone}
-                  onChange={(e) => setForm((prev) => ({ ...prev, contact_phone: e.target.value }))}
+                  onChange={(e) =>
+                    setForm((prev) => ({
+                      ...prev,
+                      contact_phone: e.target.value,
+                    }))
+                  }
                   placeholder="e.g. +256 700 000 000"
                 />
               </div>
@@ -232,7 +277,9 @@ export default function Roommates() {
                 <Textarea
                   id="about"
                   value={form.about}
-                  onChange={(e) => setForm((prev) => ({ ...prev, about: e.target.value }))}
+                  onChange={(e) =>
+                    setForm((prev) => ({ ...prev, about: e.target.value }))
+                  }
                   placeholder="Share your habits, preferred room type, move-in period, etc."
                   className="min-h-24"
                 />
@@ -240,11 +287,17 @@ export default function Roommates() {
 
               <div className="flex gap-2">
                 <Button type="submit" disabled={isSaving} className="flex-1">
-                  {isSaving ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : null}
+                  {isSaving ? (
+                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  ) : null}
                   {myPost ? "Update Listing" : "Publish Listing"}
                 </Button>
                 {myPost ? (
-                  <Button type="button" variant="outline" onClick={handleDeactivate}>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={handleDeactivate}
+                  >
                     Hide
                   </Button>
                 ) : null}
@@ -283,9 +336,13 @@ export default function Roommates() {
                       <div>
                         <CardTitle className="text-lg flex items-center gap-2">
                           <UserRound className="h-4 w-4 text-primary" />
-                          {(post.users?.first_name || "Student") + " " + (post.users?.last_name || "")}
+                          {(post.users?.first_name || "Student") +
+                            " " +
+                            (post.users?.last_name || "")}
                         </CardTitle>
-                        <CardDescription>{post.users?.course || "Student"}</CardDescription>
+                        <CardDescription>
+                          {post.users?.course || "Student"}
+                        </CardDescription>
                       </div>
                       <Badge variant="secondary">Active</Badge>
                     </div>
@@ -293,7 +350,12 @@ export default function Roommates() {
                   <CardContent className="space-y-2 text-sm text-slate-600">
                     <p className="flex items-center gap-2">
                       <MapPin className="h-4 w-4 text-slate-400" />
-                      <span>{post.university}{post.preferred_location ? ` - ${post.preferred_location}` : ""}</span>
+                      <span>
+                        {post.university}
+                        {post.preferred_location
+                          ? ` - ${post.preferred_location}`
+                          : ""}
+                      </span>
                     </p>
                     {post.budget_range ? (
                       <p className="flex items-center gap-2">
@@ -308,7 +370,9 @@ export default function Roommates() {
                       </p>
                     ) : null}
                     {post.about ? (
-                      <p className="pt-2 border-t border-slate-100 text-slate-700">{post.about}</p>
+                      <p className="pt-2 border-t border-slate-100 text-slate-700">
+                        {post.about}
+                      </p>
                     ) : null}
                   </CardContent>
                 </Card>

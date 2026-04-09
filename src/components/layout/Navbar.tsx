@@ -115,10 +115,20 @@ export default function Navbar() {
             </Link>
             {!user && (
               <div className="flex gap-2 pt-2">
-                <Link to="/auth" className="flex-1" onClick={() => setIsMobileMenuOpen(false)}>
-                  <Button variant="outline" className="w-full">Log in</Button>
+                <Link
+                  to="/auth"
+                  className="flex-1"
+                  onClick={() => setIsMobileMenuOpen(false)}
+                >
+                  <Button variant="outline" className="w-full">
+                    Log in
+                  </Button>
                 </Link>
-                <Link to="/auth?mode=signup" className="flex-1" onClick={() => setIsMobileMenuOpen(false)}>
+                <Link
+                  to="/auth?mode=signup"
+                  className="flex-1"
+                  onClick={() => setIsMobileMenuOpen(false)}
+                >
                   <Button className="w-full">Sign up</Button>
                 </Link>
               </div>

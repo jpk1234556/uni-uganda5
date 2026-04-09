@@ -256,7 +256,9 @@ export default function HostelDetail() {
     } catch (error: unknown) {
       const message = getErrorMessage(error, "Booking failed");
       if (/row-level security|permission denied|policy/i.test(message)) {
-        toast.error("Booking is blocked by database permissions. Run phase22_booking_enablement.sql in Supabase and try again.");
+        toast.error(
+          "Booking is blocked by database permissions. Run phase22_booking_enablement.sql in Supabase and try again.",
+        );
       } else {
         toast.error(message);
       }
@@ -313,7 +315,9 @@ export default function HostelDetail() {
   const images =
     hostel.images && hostel.images.length > 0
       ? hostel.images
-      : ["https://images.unsplash.com/photo-1555854877-bab0e564b8d5?q=80&w=2000&auto=format&fit=crop"];
+      : [
+          "https://images.unsplash.com/photo-1555854877-bab0e564b8d5?q=80&w=2000&auto=format&fit=crop",
+        ];
 
   return (
     <div className="min-h-screen bg-slate-50 pb-20">
@@ -338,7 +342,7 @@ export default function HostelDetail() {
             </>
           )}
         </Carousel>
-        
+
         <div className="absolute inset-0 bg-gradient-to-t from-slate-900/90 via-slate-900/20 to-transparent pointer-events-none" />
         <div className="absolute top-4 left-4">
           <Link to="/search">
@@ -477,11 +481,15 @@ export default function HostelDetail() {
                             </div>
                           </div>
                           <div className="flex flex-col sm:items-end justify-center gap-3 w-full sm:w-auto border-t sm:border-t-0 sm:border-l border-slate-100 pt-4 sm:pt-0 sm:pl-6 shrink-0">
-                            <div className="text-2xl font-bold text-indigo-600">{formatUGX(room.price)}</div>
+                            <div className="text-2xl font-bold text-indigo-600">
+                              {formatUGX(room.price)}
+                            </div>
                             <Button
                               onClick={() => handleBookClick(room)}
                               disabled={room.available === 0}
-                              variant={room.available > 0 ? "default" : "secondary"}
+                              variant={
+                                room.available > 0 ? "default" : "secondary"
+                              }
                               className={cn(
                                 "w-full sm:w-auto font-medium shadow-sm transition-all",
                                 room.available > 0
