@@ -241,21 +241,21 @@ export default function Search() {
 
   return (
     <div className="container mx-auto px-4 py-8 max-w-7xl animate-in fade-in zoom-in-95 duration-500">
-      <div className="rounded-[28px] border border-slate-200/80 bg-white/88 backdrop-blur-md p-4 sm:p-6 lg:p-8 shadow-[0_20px_60px_rgba(15,23,42,0.08)]">
-      <div className="flex flex-col lg:flex-row gap-8">
+      <div className="rounded-[28px] border border-slate-300/80 bg-white/96 backdrop-blur-lg p-4 sm:p-6 lg:p-8 shadow-[0_20px_60px_rgba(15,23,42,0.10)]">
+        <div className="flex flex-col lg:flex-row gap-8">
         {/* Filters Sidebar */}
         <div className="w-full lg:w-1/4 space-y-6">
-          <div className="bg-white/95 p-6 rounded-2xl shadow-md border border-slate-200 sticky top-20">
-            <h3 className="font-bold text-lg text-slate-900 mb-4 tracking-tight">Filters</h3>
+          <div className="bg-white p-6 rounded-2xl shadow-md border border-slate-300 sticky top-20">
+            <h3 className="font-black text-lg text-slate-950 mb-4 tracking-tight">Filters</h3>
 
             <div className="space-y-4">
               <div className="space-y-2">
-                  <label className="text-sm font-semibold text-slate-800">University / Area</label>
+                  <label className="text-sm font-bold text-slate-900">University / Area</label>
                 <Select
                   value={selectedUniversity}
                   onValueChange={setSelectedUniversity}
                 >
-                  <SelectTrigger className="w-full bg-white text-slate-900 border-slate-200">
+                  <SelectTrigger className="w-full h-11 bg-white text-slate-900 border-slate-300">
                     <SelectValue placeholder="Select University" />
                   </SelectTrigger>
                   <SelectContent className="bg-white shadow-xl z-50 border border-slate-200">
@@ -274,7 +274,7 @@ export default function Search() {
                   <label className="text-sm font-semibold text-slate-800">
                     Price Range (UGX)
                   </label>
-                  <span className="text-xs text-muted-foreground">
+                  <span className="text-xs font-semibold text-slate-600">
                     {priceRange[0] / 1000}k - {priceRange[1] / 1000}k
                   </span>
                 </div>
@@ -290,12 +290,12 @@ export default function Search() {
               </div>
 
               <div className="space-y-2 pt-4 border-t border-slate-200">
-                <label className="text-sm font-semibold text-slate-800">Minimum Rating</label>
+                <label className="text-sm font-bold text-slate-900">Minimum Rating</label>
                 <Select
                   value={minRating.toString()}
                   onValueChange={(v) => setMinRating(Number(v))}
                 >
-                  <SelectTrigger className="w-full bg-white text-slate-900 border-slate-200">
+                  <SelectTrigger className="w-full h-11 bg-white text-slate-900 border-slate-300">
                     <SelectValue placeholder="Any Rating" />
                   </SelectTrigger>
                   <SelectContent className="bg-white shadow-xl z-50 border border-slate-200">
@@ -308,7 +308,7 @@ export default function Search() {
               </div>
 
               <div className="space-y-3 pt-4 border-t border-slate-200">
-                <label className="text-sm font-semibold text-slate-800">Amenities</label>
+                <label className="text-sm font-bold text-slate-900">Amenities</label>
                 {AMENITIES.map((amenity) => (
                   <div key={amenity.id} className="flex items-center space-x-2">
                     <Checkbox
@@ -331,9 +331,9 @@ export default function Search() {
                     />
                     <label
                       htmlFor={amenity.id}
-                      className="text-sm font-medium text-slate-700 leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 flex items-center gap-2"
+                      className="text-sm font-semibold text-slate-800 leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 flex items-center gap-2"
                     >
-                      <amenity.icon className="h-4 w-4 text-muted-foreground" />
+                      <amenity.icon className="h-4 w-4 text-slate-500" />
                       {amenity.label}
                     </label>
                   </div>
@@ -362,7 +362,7 @@ export default function Search() {
               <SearchIcon className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
               <Input
                 placeholder="Search by hostel name or university..."
-                className="pl-10 h-12 text-base rounded-xl shadow-sm bg-white border-slate-200 text-slate-900 focus-visible:ring-primary"
+                className="pl-10 h-12 text-base rounded-xl shadow-sm bg-white border-slate-300 placeholder:text-slate-500 text-slate-900 focus-visible:ring-primary"
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
               />
@@ -375,7 +375,7 @@ export default function Search() {
           <div className="mb-4 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
             <div>
               <h2 className="text-3xl font-black tracking-tight text-slate-900">Available Hostels</h2>
-              <p className="text-slate-600 font-medium">
+              <p className="text-slate-700 font-semibold">
                 Showing {filteredHostels.length} available properties
               </p>
             </div>
@@ -384,7 +384,7 @@ export default function Search() {
                 Sort by:
               </span>
               <Select value={sortBy} onValueChange={setSortBy}>
-                <SelectTrigger className="w-[180px] bg-white border-slate-200 text-slate-900">
+                <SelectTrigger className="w-[180px] h-11 bg-white border-slate-300 text-slate-900">
                   <SelectValue placeholder="Sort by" />
                 </SelectTrigger>
                 <SelectContent className="bg-white shadow-xl z-50 border border-slate-200">
@@ -400,13 +400,13 @@ export default function Search() {
           {isLoading ? (
             <div className="py-20 flex justify-center items-center flex-col gap-4">
               <Loader2 className="h-10 w-10 animate-spin text-primary" />
-              <p className="text-muted-foreground">
+              <p className="text-slate-700 font-semibold">
                 Fetching live availability...
               </p>
             </div>
           ) : filteredHostels.length === 0 ? (
-            <div className="text-center py-20 border border-dashed border-slate-300 rounded-xl bg-white/90">
-              <p className="text-slate-600 text-lg font-medium">
+            <div className="text-center py-20 border border-dashed border-slate-300 rounded-xl bg-slate-50">
+              <p className="text-slate-700 text-lg font-semibold">
                 No properties match your current filters.
               </p>
             </div>
@@ -414,7 +414,7 @@ export default function Search() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {sortedHostels.map((hostel) => (
                 <Link to={`/hostel/${hostel.id}`} key={hostel.id}>
-                  <Card className="overflow-hidden bg-white border-slate-200 hover:border-primary/40 transition-all duration-300 group cursor-pointer shadow-sm hover:shadow-lg">
+                  <Card className="overflow-hidden bg-white border-slate-300 hover:border-primary/50 transition-all duration-300 group cursor-pointer shadow-sm hover:shadow-lg">
                     <div className="aspect-[4/3] relative overflow-hidden bg-muted">
                       <img
                         src={
@@ -424,7 +424,7 @@ export default function Search() {
                         alt={hostel.name}
                         className="object-cover w-full h-full group-hover:scale-110 transition-transform duration-500"
                       />
-                      <div className="absolute top-4 right-4 bg-white/90 backdrop-blur-sm px-3 py-1 rounded-full text-sm font-semibold shadow-sm flex items-center gap-1 text-slate-800">
+                      <div className="absolute top-4 right-4 bg-white/95 backdrop-blur-sm px-3 py-1 rounded-full text-sm font-semibold shadow-sm flex items-center gap-1 text-slate-900">
                         <Star className="h-3 w-3 text-amber-400 fill-amber-400" />
                         {(hostel.rating || 0) > 0 ? hostel.rating : "New"}
                       </div>
@@ -456,7 +456,7 @@ export default function Search() {
                           {hostel.name}
                         </h3>
                       </div>
-                      <div className="flex items-center text-slate-500 mb-4 text-sm">
+                      <div className="flex items-center text-slate-700 mb-4 text-sm font-medium">
                         <MapPin className="h-4 w-4 mr-1 shrink-0" />
                         <span className="line-clamp-1">
                           {hostel.address || hostel.university}

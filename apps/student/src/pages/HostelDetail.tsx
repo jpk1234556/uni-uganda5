@@ -426,82 +426,92 @@ export default function HostelDetail() {
             </Card>
 
             <div className="space-y-4">
-              <h3 className="text-xl font-bold text-slate-900">
-                Available Room Types
-              </h3>
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+                <h3 className="text-2xl font-black tracking-tight text-slate-900">
+                  Available Room Types
+                </h3>
+                <div className="text-sm font-semibold text-slate-700 bg-white border border-slate-200 rounded-lg px-3 py-1.5 w-fit">
+                  Rooms available now: {rooms.filter((r) => r.available > 0).length}/{rooms.length}
+                </div>
+              </div>
               {rooms.length === 0 ? (
                 <div className="p-8 text-center bg-white rounded-2xl border border-dashed border-slate-300 text-slate-500">
                   <Building className="h-10 w-10 mx-auto mb-3 opacity-30" />
-                  <p>The owner has not listed any room types yet.</p>
+                  <p className="font-medium">The owner has not listed any room types yet.</p>
                 </div>
               ) : (
                 <div className="grid grid-cols-1 gap-4">
                   {rooms.map((room) => (
                     <Card
                       key={room.id}
-                      className="overflow-hidden border-slate-200 shadow-sm transition-all hover:shadow-md hover:border-indigo-100 group flex flex-col p-0"
+                      className="overflow-hidden border-slate-300 bg-white shadow-sm transition-all hover:shadow-md hover:border-primary/40"
                     >
-                      <div className="flex flex-col sm:flex-row w-full">
-                        {room.images && room.images.length > 0 && (
-                          <div className="sm:w-1/3 h-48 sm:h-auto border-b sm:border-b-0 sm:border-r border-slate-100 shrink-0">
-                            <img
-                              src={room.images[0]}
-                              alt={room.name}
-                              className="w-full h-full object-cover"
-                            />
-                          </div>
-                        )}
-                        <div className="p-6 flex-1 flex flex-col sm:flex-row gap-4 justify-between items-start sm:items-center">
-                          <div className="flex-1">
-                            <h4 className="text-lg font-bold text-slate-900 mb-1">
-                              {room.name}
-                            </h4>
-                            {room.description && (
-                              <p className="text-sm text-slate-600 mb-3">
-                                {room.description}
-                              </p>
+                      <CardContent className="p-0">
+                        <div className="grid grid-cols-1 md:grid-cols-[180px_1fr_auto]">
+                          <div className="h-36 md:h-full bg-slate-100 border-b md:border-b-0 md:border-r border-slate-200">
+                            {room.images && room.images.length > 0 ? (
+                              <img
+                                src={room.images[0]}
+                                alt={room.name}
+                                className="w-full h-full object-cover"
+                              />
+                            ) : (
+                              <div className="w-full h-full flex items-center justify-center text-slate-400">
+                                <Building className="h-8 w-8" />
+                              </div>
                             )}
-                            <div className="flex gap-4 text-sm text-slate-500 font-medium bg-slate-50 p-2 rounded-lg w-fit">
-                              <span className="flex items-center gap-1">
-                                <Users className="h-4 w-4" /> Capacity:{" "}
-                                {room.capacity}
+                          </div>
+
+                          <div className="p-5">
+                            <div className="flex flex-wrap items-center gap-2 mb-2">
+                              <h4 className="text-lg font-bold text-slate-900">{room.name}</h4>
+                              <Badge
+                                variant="outline"
+                                className={cn(
+                                  "font-semibold",
+                                  room.available > 0
+                                    ? "border-emerald-200 bg-emerald-50 text-emerald-700"
+                                    : "border-rose-200 bg-rose-50 text-rose-700",
+                                )}
+                              >
+                                {room.available > 0 ? "Available" : "Full"}
+                              </Badge>
+                            </div>
+
+                            {room.description ? (
+                              <p className="text-sm text-slate-700 mb-3 leading-relaxed">{room.description}</p>
+                            ) : (
+                              <p className="text-sm text-slate-500 mb-3">Comfortable room option with standard amenities.</p>
+                            )}
+
+                            <div className="flex flex-wrap gap-2">
+                              <span className="inline-flex items-center gap-1 rounded-md border border-slate-200 bg-slate-50 px-2.5 py-1 text-xs font-semibold text-slate-700">
+                                <Users className="h-3.5 w-3.5" /> Capacity: {room.capacity}
                               </span>
-                              <span className="pl-4 border-l border-slate-200">
-                                Available:{" "}
-                                <strong
-                                  className={
-                                    room.available > 0
-                                      ? "text-emerald-600"
-                                      : "text-rose-500"
-                                  }
-                                >
-                                  {room.available}
-                                </strong>
+                              <span className="inline-flex items-center rounded-md border border-slate-200 bg-slate-50 px-2.5 py-1 text-xs font-semibold text-slate-700">
+                                Slots left: {room.available}
                               </span>
                             </div>
                           </div>
-                          <div className="flex flex-col sm:items-end justify-center gap-3 w-full sm:w-auto border-t sm:border-t-0 sm:border-l border-slate-100 pt-4 sm:pt-0 sm:pl-6 shrink-0">
-                            <div className="text-2xl font-bold text-indigo-600">
-                              {formatUGX(room.price)}
-                            </div>
+
+                          <div className="p-5 md:border-l border-slate-200 flex md:flex-col items-center md:items-end justify-between gap-3 bg-slate-50/60">
+                            <div className="text-2xl font-black text-primary">{formatUGX(room.price)}</div>
                             <Button
                               onClick={() => handleBookClick(room)}
                               disabled={room.available === 0}
-                              variant={
-                                room.available > 0 ? "default" : "secondary"
-                              }
+                              variant={room.available > 0 ? "default" : "secondary"}
                               className={cn(
-                                "w-full sm:w-auto font-medium shadow-sm transition-all",
+                                "w-full md:w-32 font-semibold shadow-sm",
                                 room.available > 0
-                                  ? "bg-indigo-600 hover:bg-indigo-700 text-white"
-                                  : "bg-slate-100 text-slate-400 cursor-not-allowed",
+                                  ? "bg-primary hover:bg-primary/90 text-white"
+                                  : "bg-slate-200 text-slate-500 cursor-not-allowed",
                               )}
                             >
                               {room.available > 0 ? "Book Room" : "Full"}
                             </Button>
                           </div>
                         </div>
-                      </div>
+                      </CardContent>
                     </Card>
                   ))}
                 </div>

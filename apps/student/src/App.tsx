@@ -23,7 +23,10 @@ export default function App() {
             style={{ backgroundImage: `url(${studentBackground})` }}
             aria-hidden="true"
           />
-          <div className="fixed inset-0 -z-10 bg-white/85" aria-hidden="true" />
+          <div
+            className="fixed inset-0 -z-10 bg-gradient-to-b from-white/90 via-white/86 to-slate-100/86"
+            aria-hidden="true"
+          />
           <Navbar />
           <main className="flex-grow">
             <Suspense
