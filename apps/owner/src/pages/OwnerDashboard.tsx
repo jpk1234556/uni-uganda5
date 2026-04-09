@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -103,6 +103,7 @@ export default function OwnerDashboard() {
   const [isRoomDialogOpen, setIsRoomDialogOpen] = useState(false);
   const [isLoadingRooms, setIsLoadingRooms] = useState(false);
   const [newRoom, setNewRoom] = useState({ name: "", price: "", capacity: "" });
+  const triggerRef = useRef<HTMLButtonElement>(null);
 
   const fetchData = useCallback(async () => {
     try {
@@ -357,6 +358,12 @@ export default function OwnerDashboard() {
           </div>
 
           <div className="flex items-center gap-3">
+            <Button onClick={() => {
+              setIsWizardOpen(true);
+              setTimeout(() => triggerRef.current?.click(), 0);
+            }} className="h-12 px-6 bg-primary hover:bg-primary/90 text-white rounded-xl shadow-md transition-all font-semibold text-sm flex items-center gap-2">
+              <Plus className="h-5 w-5" /> Add New Property
+            </Button>
             <Dialog open={isWizardOpen} onOpenChange={(open) => {
               setIsWizardOpen(open);
               if (!open) {
@@ -365,11 +372,7 @@ export default function OwnerDashboard() {
                 setNewHostel({ name: "", university: "", address: "", description: "", price_range: "", images: "" });
               }
             }}>
-              <DialogTrigger asChild>
-                <Button className="h-12 px-6 bg-primary hover:bg-primary/90 text-white rounded-xl shadow-md transition-all font-semibold text-sm flex items-center gap-2">
-                  <Plus className="h-5 w-5" /> Add New Property
-                </Button>
-              </DialogTrigger>
+              <DialogTrigger ref={triggerRef} style={{ display: "none" }} />
               <DialogContent className="sm:max-w-[600px] rounded-2xl border-0 shadow-2xl p-0 overflow-hidden bg-white">
                 <div className="bg-slate-50 border-b border-slate-100 text-slate-900 p-6 relative">
                   <DialogHeader>
