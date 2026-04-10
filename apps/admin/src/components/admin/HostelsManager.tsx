@@ -174,10 +174,12 @@ export default function HostelsManager() {
     if (!incoming || incoming.length === 0) return;
 
     const files = Array.from(incoming);
-    const imageFiles = files.filter((file) => file.type.startsWith("image/"));
+    const imageFiles = files.filter((file) =>
+      ["image/png", "image/jpeg"].includes(file.type),
+    );
 
     if (imageFiles.length !== files.length) {
-      toast.error("Only image files are allowed.");
+      toast.error("Only PNG and JPEG files are allowed.");
     }
 
     if (imageFiles.length === 0) return;
@@ -200,10 +202,12 @@ export default function HostelsManager() {
     if (!incoming || incoming.length === 0) return;
 
     const files = Array.from(incoming);
-    const imageFiles = files.filter((file) => file.type.startsWith("image/"));
+    const imageFiles = files.filter((file) =>
+      ["image/png", "image/jpeg"].includes(file.type),
+    );
 
     if (imageFiles.length !== files.length) {
-      toast.error("Only image files are allowed.");
+      toast.error("Only PNG and JPEG files are allowed.");
     }
 
     if (imageFiles.length === 0) return;
@@ -237,15 +241,7 @@ export default function HostelsManager() {
       const ownerId = (newHostel.owner_id || user.id || "").trim();
       if (!ownerId) throw new Error("Please assign an owner.");
 
-      const manualImageUrls = newHostel.images
-        ? newHostel.images
-            .split(",")
-            .map((i) => i.trim())
-            .filter(Boolean)
-        : [];
-      const imagesArray = Array.from(
-        new Set([...manualImageUrls, ...selectedImageDataUrls]),
-      );
+      const imagesArray = [...selectedImageDataUrls];
       const amenitiesArray = newHostel.amenities
         ? newHostel.amenities
             .split(",")
@@ -357,11 +353,11 @@ export default function HostelsManager() {
       address: hostel.address || "",
       description: hostel.description || "",
       price_range: hostel.price_range || "",
-      images: (hostel.images || []).join(", "),
+      images: "",
       amenities: (hostel.amenities || []).join(", "),
       owner_id: hostel.owner_id || "",
     });
-    setSelectedImageDataUrls([]);
+    setSelectedImageDataUrls([...(hostel.images || [])]);
     setWizardStep(2);
     setIsCreateDialogOpen(true);
   };
@@ -730,25 +726,13 @@ export default function HostelsManager() {
                             htmlFor="images"
                             className="flex items-center gap-1 text-sm font-semibold text-slate-700"
                           >
-                            <ImageIcon className="h-4 w-4 text-primary" /> Media
-                            Image URLs
+                            <ImageIcon className="h-4 w-4 text-primary" />
+                            Hostel Photos (PNG / JPEG)
                           </Label>
-                          <Input
-                            id="images"
-                            value={newHostel.images}
-                            onChange={(e) =>
-                              setNewHostel({
-                                ...newHostel,
-                                images: e.target.value,
-                              })
-                            }
-                            placeholder="https://..., https://..."
-                            className="rounded-xl border-slate-200 text-sm h-11 bg-white shadow-sm"
-                          />
                           <input
                             ref={fileInputRef}
                             type="file"
-                            accept="image/*"
+                            accept="image/png,image/jpeg"
                             multiple
                             className="hidden"
                             onChange={(e) =>
@@ -774,7 +758,7 @@ export default function HostelsManager() {
                             )}
                           >
                             <p className="text-xs text-slate-600 mb-2">
-                              Drag and drop images here
+                              Drag and drop PNG or JPEG files here
                             </p>
                             <Button
                               type="button"
@@ -786,7 +770,7 @@ export default function HostelsManager() {
                             </Button>
                           </div>
                           {selectedImageDataUrls.length > 0 && (
-                            <div className="mt-2 grid grid-cols-4 gap-2">
+                            <div className="mt-2 grid grid-cols-2 sm:grid-cols-4 gap-2">
                               {selectedImageDataUrls.map((img, idx) => (
                                 <div
                                   key={`${idx}-${img.slice(0, 20)}`}
