@@ -1375,43 +1375,43 @@ export default function OwnerDashboard() {
                 </h4>
                 <form
                   onSubmit={handleAddRoom}
-                  className="grid grid-cols-1 sm:grid-cols-4 gap-4 items-end"
+                  className="space-y-4"
                 >
-                  <div className="space-y-2 sm:col-span-2">
-                    <Label className="text-xs font-semibold text-slate-600">
-                      Room Label
-                    </Label>
-                    <Input
-                      required
-                      value={newRoom.name}
-                      onChange={(e) =>
-                        setNewRoom({ ...newRoom, name: e.target.value })
-                      }
-                      placeholder="e.g. Single Self-Contained"
-                      className="rounded-lg border-slate-200 text-sm h-10 bg-white shadow-sm"
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label className="text-xs font-semibold text-slate-600">
-                      Price (UGX)
-                    </Label>
-                    <Input
-                      required
-                      type="number"
-                      min="0"
-                      value={newRoom.price}
-                      onChange={(e) =>
-                        setNewRoom({ ...newRoom, price: e.target.value })
-                      }
-                      placeholder="1500000"
-                      className="rounded-lg border-slate-200 text-sm h-10 bg-white shadow-sm"
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label className="text-xs font-semibold text-slate-600">
-                      Capacity
-                    </Label>
-                    <div className="flex gap-2">
+                  <div className="grid grid-cols-1 sm:grid-cols-4 gap-4 items-end">
+                    <div className="space-y-2 sm:col-span-2">
+                      <Label className="text-xs font-semibold text-slate-600">
+                        Room Label
+                      </Label>
+                      <Input
+                        required
+                        value={newRoom.name}
+                        onChange={(e) =>
+                          setNewRoom({ ...newRoom, name: e.target.value })
+                        }
+                        placeholder="e.g. Single Self-Contained"
+                        className="rounded-lg border-slate-200 text-sm h-10 bg-white shadow-sm"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label className="text-xs font-semibold text-slate-600">
+                        Price (UGX)
+                      </Label>
+                      <Input
+                        required
+                        type="number"
+                        min="0"
+                        value={newRoom.price}
+                        onChange={(e) =>
+                          setNewRoom({ ...newRoom, price: e.target.value })
+                        }
+                        placeholder="1500000"
+                        className="rounded-lg border-slate-200 text-sm h-10 bg-white shadow-sm"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label className="text-xs font-semibold text-slate-600">
+                        Capacity
+                      </Label>
                       <Input
                         required
                         type="number"
@@ -1423,13 +1423,85 @@ export default function OwnerDashboard() {
                         placeholder="1"
                         className="rounded-lg border-slate-200 text-sm h-10 bg-white shadow-sm"
                       />
+                    </div>
+                  </div>
+
+                  <div className="space-y-1.5">
+                    <Label className="text-xs font-semibold text-slate-700 flex items-center gap-1.5">
+                      <ImageIcon className="h-3.5 w-3.5 text-primary" /> Room Images
+                    </Label>
+                    <input
+                      ref={roomFileInputRef}
+                      type="file"
+                      accept="image/*"
+                      multiple
+                      className="hidden"
+                      onChange={(e) => handleIncomingRoomFiles(e.target.files)}
+                    />
+                    <div
+                      onDragOver={(e) => {
+                        e.preventDefault();
+                        setIsRoomDragActive(true);
+                      }}
+                      onDragLeave={() => setIsRoomDragActive(false)}
+                      onDrop={(e) => {
+                        e.preventDefault();
+                        setIsRoomDragActive(false);
+                        handleIncomingRoomFiles(e.dataTransfer.files);
+                      }}
+                      className={cn(
+                        "rounded-xl border border-dashed p-3 text-center transition-colors",
+                        isRoomDragActive
+                          ? "border-primary bg-primary/5"
+                          : "border-slate-300 bg-white",
+                      )}
+                    >
+                      <p className="text-xs text-slate-600 mb-2">Drag and drop room images here</p>
                       <Button
-                        type="submit"
-                        className="shrink-0 bg-primary hover:bg-primary/90 text-white rounded-lg h-10 w-10 p-0 shadow-sm transition-transform hover:scale-105"
+                        type="button"
+                        variant="outline"
+                        className="h-8 text-xs"
+                        onClick={() => roomFileInputRef.current?.click()}
                       >
-                        <Plus className="h-4 w-4" />
+                        Choose From Files
                       </Button>
                     </div>
+                    {selectedRoomImageDataUrls.length > 0 && (
+                      <div className="grid grid-cols-4 gap-2 mt-2">
+                        {selectedRoomImageDataUrls.map((img, idx) => (
+                          <div
+                            key={`${idx}-${img.slice(0, 20)}`}
+                            className="relative rounded-md overflow-hidden border border-slate-200"
+                          >
+                            <img
+                              src={img}
+                              alt={`room-upload-${idx + 1}`}
+                              className="h-14 w-full object-cover"
+                            />
+                            <button
+                              type="button"
+                              className="absolute top-0.5 right-0.5 h-5 w-5 rounded-full bg-black/60 text-white text-[10px]"
+                              onClick={() =>
+                                setSelectedRoomImageDataUrls((prev) =>
+                                  prev.filter((_, i) => i !== idx),
+                                )
+                              }
+                            >
+                              x
+                            </button>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="flex justify-end">
+                    <Button
+                      type="submit"
+                      className="bg-primary hover:bg-primary/90 text-white rounded-lg h-10 px-4 shadow-sm transition-transform hover:scale-105"
+                    >
+                      <Plus className="h-4 w-4 mr-1" /> Add Room Type
+                    </Button>
                   </div>
                 </form>
               </div>
