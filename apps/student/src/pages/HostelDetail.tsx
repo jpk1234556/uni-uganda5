@@ -15,13 +15,6 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import {
-  Carousel,
-  CarouselContent,
-  CarouselItem,
-  CarouselNext,
-  CarouselPrevious,
-} from "@/components/ui/carousel";
-import {
   MapPin,
   Star,
   Building,
@@ -31,6 +24,8 @@ import {
   ArrowLeft,
   Users,
   MessageSquare,
+  ChevronLeft,
+  ChevronRight,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { supabase } from "@/lib/supabase";
@@ -85,6 +80,7 @@ export default function HostelDetail() {
   const [rooms, setRooms] = useState<RoomType[]>([]);
   const [reviews, setReviews] = useState<ReviewWithUser[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [currentImageIndex, setCurrentImageIndex] = useState(0);
 
   // Booking State
   const [selectedRoom, setSelectedRoom] = useState<RoomType | null>(null);
@@ -321,6 +317,28 @@ export default function HostelDetail() {
       ? hostel.images
       : [];
 
+  const validImages = images.filter(Boolean);
+
+  useEffect(() => {
+    setCurrentImageIndex(0);
+  }, [id, validImages.length]);
+
+  const activeImage = validImages[currentImageIndex];
+
+  const showPrevImage = () => {
+    if (validImages.length <= 1) return;
+    setCurrentImageIndex((prev) =>
+      prev === 0 ? validImages.length - 1 : prev - 1,
+    );
+  };
+
+  const showNextImage = () => {
+    if (validImages.length <= 1) return;
+    setCurrentImageIndex((prev) =>
+      prev === validImages.length - 1 ? 0 : prev + 1,
+    );
+  };
+
   const mapQuery = encodeURIComponent(
     hostel.address || hostel.university || "Kampala, Uganda",
   );
@@ -329,32 +347,42 @@ export default function HostelDetail() {
     <div className="min-h-screen bg-slate-50 pb-20">
       {/* Hero Image Section with Carousel */}
       <div className="w-full h-[40vh] md:h-[60vh] relative bg-slate-200 group">
-        <Carousel className="w-full h-full" opts={{ loop: true }}>
-          <CarouselContent className="h-full ml-0">
-            {images.map((image, index) => (
-              <CarouselItem key={index} className="h-full pl-0">
-                <img
-                  src={image}
-                  className="w-full h-full object-cover"
-                  alt={`${hostel.name} - Image ${index + 1}`}
-                />
-              </CarouselItem>
-            ))}
-            {images.length === 0 && (
-              <CarouselItem className="h-full pl-0">
-                <div className="w-full h-full flex items-center justify-center bg-slate-300 text-slate-700 font-semibold">
-                  No property images uploaded
-                </div>
-              </CarouselItem>
-            )}
-          </CarouselContent>
-          {images.length > 1 && (
-            <>
-              <CarouselPrevious className="left-4 opacity-0 group-hover:opacity-100 transition-opacity bg-white/80 hover:bg-white border-none shadow-lg h-10 w-10" />
-              <CarouselNext className="right-4 opacity-0 group-hover:opacity-100 transition-opacity bg-white/80 hover:bg-white border-none shadow-lg h-10 w-10" />
-            </>
-          )}
-        </Carousel>
+        {activeImage ? (
+          <img
+            src={activeImage}
+            className="w-full h-full object-cover"
+            alt={`${hostel.name} - Image ${currentImageIndex + 1}`}
+            loading="eager"
+            decoding="async"
+          />
+        ) : (
+          <div className="w-full h-full flex items-center justify-center bg-slate-300 text-slate-700 font-semibold">
+            No property images uploaded
+          </div>
+        )}
+
+        {validImages.length > 1 && (
+          <>
+            <Button
+              type="button"
+              variant="outline"
+              size="icon"
+              onClick={showPrevImage}
+              className="absolute left-4 top-1/2 -translate-y-1/2 rounded-full bg-white/80 hover:bg-white border-none shadow-lg h-10 w-10 opacity-0 group-hover:opacity-100 transition-opacity"
+            >
+              <ChevronLeft className="h-5 w-5" />
+            </Button>
+            <Button
+              type="button"
+              variant="outline"
+              size="icon"
+              onClick={showNextImage}
+              className="absolute right-4 top-1/2 -translate-y-1/2 rounded-full bg-white/80 hover:bg-white border-none shadow-lg h-10 w-10 opacity-0 group-hover:opacity-100 transition-opacity"
+            >
+              <ChevronRight className="h-5 w-5" />
+            </Button>
+          </>
+        )}
 
         <div className="absolute inset-0 bg-gradient-to-t from-slate-900/90 via-slate-900/20 to-transparent pointer-events-none" />
         <div className="absolute top-4 left-4">
