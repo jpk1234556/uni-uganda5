@@ -16,28 +16,62 @@ ALTER TABLE IF EXISTS "hostels" DISABLE ROW LEVEL SECURITY;
 ALTER TABLE IF EXISTS "users" DISABLE ROW LEVEL SECURITY;
 
 -- Drop policies
-DROP POLICY IF EXISTS "Users can view own profile" ON "users";
-DROP POLICY IF EXISTS "Super admins can view all users" ON "users";
-DROP POLICY IF EXISTS "Anyone can view approved hostels" ON "hostels";
-DROP POLICY IF EXISTS "Hostel owners can manage their hostels" ON "hostels";
-DROP POLICY IF EXISTS "Super admins can manage all hostels" ON "hostels";
-DROP POLICY IF EXISTS "Anyone can view room types for approved hostels" ON "room_types";
-DROP POLICY IF EXISTS "Hostel owners can manage their room types" ON "room_types";
-DROP POLICY IF EXISTS "Students can view own bookings" ON "bookings";
-DROP POLICY IF EXISTS "Hostel owners can view bookings for their hostels" ON "bookings";
-DROP POLICY IF EXISTS "Super admins can view all bookings" ON "bookings";
-DROP POLICY IF EXISTS "Super admins can view all payments" ON "payments";
-DROP POLICY IF EXISTS "Hostel owners can view their payments" ON "payments";
-DROP POLICY IF EXISTS "Students can view own payments" ON "payments";
+DO $$
+BEGIN
+  IF to_regclass('public.users') IS NOT NULL THEN
+    DROP POLICY IF EXISTS "Users can view own profile" ON "users";
+    DROP POLICY IF EXISTS "Super admins can view all users" ON "users";
+  END IF;
+
+  IF to_regclass('public.hostels') IS NOT NULL THEN
+    DROP POLICY IF EXISTS "Anyone can view approved hostels" ON "hostels";
+    DROP POLICY IF EXISTS "Hostel owners can manage their hostels" ON "hostels";
+    DROP POLICY IF EXISTS "Super admins can manage all hostels" ON "hostels";
+  END IF;
+
+  IF to_regclass('public.room_types') IS NOT NULL THEN
+    DROP POLICY IF EXISTS "Anyone can view room types for approved hostels" ON "room_types";
+    DROP POLICY IF EXISTS "Hostel owners can manage their room types" ON "room_types";
+  END IF;
+
+  IF to_regclass('public.bookings') IS NOT NULL THEN
+    DROP POLICY IF EXISTS "Students can view own bookings" ON "bookings";
+    DROP POLICY IF EXISTS "Hostel owners can view bookings for their hostels" ON "bookings";
+    DROP POLICY IF EXISTS "Super admins can view all bookings" ON "bookings";
+  END IF;
+
+  IF to_regclass('public.payments') IS NOT NULL THEN
+    DROP POLICY IF EXISTS "Super admins can view all payments" ON "payments";
+    DROP POLICY IF EXISTS "Hostel owners can view their payments" ON "payments";
+    DROP POLICY IF EXISTS "Students can view own payments" ON "payments";
+  END IF;
+END $$;
 
 -- Drop functions
 DROP FUNCTION IF EXISTS public.get_user_role();
 DROP FUNCTION IF EXISTS update_updated_at_column();
-DROP TRIGGER IF EXISTS update_users_updated_at ON "users";
-DROP TRIGGER IF EXISTS update_hostels_updated_at ON "hostels";
-DROP TRIGGER IF EXISTS update_room_types_updated_at ON "room_types";
-DROP TRIGGER IF EXISTS update_bookings_updated_at ON "bookings";
-DROP TRIGGER IF EXISTS update_payments_updated_at ON "payments";
+DO $$
+BEGIN
+  IF to_regclass('public.users') IS NOT NULL THEN
+    DROP TRIGGER IF EXISTS update_users_updated_at ON "users";
+  END IF;
+
+  IF to_regclass('public.hostels') IS NOT NULL THEN
+    DROP TRIGGER IF EXISTS update_hostels_updated_at ON "hostels";
+  END IF;
+
+  IF to_regclass('public.room_types') IS NOT NULL THEN
+    DROP TRIGGER IF EXISTS update_room_types_updated_at ON "room_types";
+  END IF;
+
+  IF to_regclass('public.bookings') IS NOT NULL THEN
+    DROP TRIGGER IF EXISTS update_bookings_updated_at ON "bookings";
+  END IF;
+
+  IF to_regclass('public.payments') IS NOT NULL THEN
+    DROP TRIGGER IF EXISTS update_payments_updated_at ON "payments";
+  END IF;
+END $$;
 
 -- ============================================
 -- PHASE 1: Core Tables
@@ -176,7 +210,6 @@ DROP POLICY IF EXISTS "Super admins can manage all hostels" ON "hostels";
 CREATE POLICY "Anyone can view approved hostels"
   ON "hostels"
   FOR SELECT
-  TO authenticated
   USING ("status" = 'approved');
 
 CREATE POLICY "Hostel owners can manage their hostels"
@@ -198,7 +231,6 @@ DROP POLICY IF EXISTS "Hostel owners can manage their room types" ON "room_types
 CREATE POLICY "Anyone can view room types for approved hostels"
   ON "room_types"
   FOR SELECT
-  TO authenticated
   USING (
     "hostel_id" IN (
       SELECT "id" FROM "hostels" WHERE "status" = 'approved'

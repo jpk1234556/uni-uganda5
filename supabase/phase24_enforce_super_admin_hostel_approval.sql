@@ -1,6 +1,17 @@
 -- Phase 24: Enforce Super-Admin-Only Hostel Approval
 -- Owners can submit and edit their listings, but cannot publish them.
 
+do $$
+begin
+  if to_regclass('public.hostels') is null then
+    raise exception 'Missing table public.hostels. Run final_complete_migration.sql (or complete_migration.sql + prior phases) before phase24_enforce_super_admin_hostel_approval.sql.';
+  end if;
+
+  if to_regclass('public.users') is null then
+    raise exception 'Missing table public.users. Run final_complete_migration.sql (or complete_migration.sql + prior phases) before phase24_enforce_super_admin_hostel_approval.sql.';
+  end if;
+end $$;
+
 alter table public.hostels enable row level security;
 
 -- Owners can submit only pending hostels.
