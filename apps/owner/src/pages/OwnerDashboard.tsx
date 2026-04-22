@@ -43,10 +43,11 @@ import {
   Clock,
   ShieldAlert,
   TrendingUp,
+  Bell,
 } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 import { supabase } from "@/lib/supabase";
-import type { Hostel, RoomType } from "@/types";
+import type { Hostel, RoomType, Notification } from "@/types";
 import { toast } from "sonner";
 import { motion, AnimatePresence } from "motion/react";
 import { ResponsiveContainer, AreaChart, Area } from "recharts";
@@ -77,9 +78,11 @@ export default function OwnerDashboard() {
 
   const [properties, setProperties] = useState<Hostel[]>([]);
   const [bookings, setBookings] = useState<BookingWithRelations[]>([]);
+  const [notifications, setNotifications] = useState<Notification[]>([]);
 
   const [isLoading, setIsLoading] = useState(true);
   const [isCreating, setIsCreating] = useState(false);
+  const [isLoadingNotifications, setIsLoadingNotifications] = useState(false);
 
   // Create Property State
   const [newHostel, setNewHostel] = useState({
@@ -165,6 +168,27 @@ export default function OwnerDashboard() {
     }
   }, [user]);
 
+  const fetchNotifications = useCallback(async () => {
+    if (!user) return;
+
+    try {
+      setIsLoadingNotifications(true);
+      const { data, error } = await supabase
+        .from("notifications")
+        .select("id, user_id, title, message, type, is_read, link, created_at")
+        .eq("user_id", user.id)
+        .order("created_at", { ascending: false })
+        .limit(20);
+
+      if (error) throw error;
+      setNotifications((data || []) as Notification[]);
+    } catch (error) {
+      console.error("Error fetching notifications:", error);
+    } finally {
+      setIsLoadingNotifications(false);
+    }
+  }, [user]);
+
   useEffect(() => {
     if (user) {
       fetchData();
@@ -178,7 +202,8 @@ export default function OwnerDashboard() {
           () => {
             fetchData();
           },
-        )
+              fetchData();
+              fetchNotifications();
         .subscribe();
 
       const hostelsSub = supabase
@@ -191,6 +216,49 @@ export default function OwnerDashboard() {
           },
         )
         .subscribe();
+           const markNotificationAsRead = async (notificationId: string) => {
+             try {
+               const { error } = await supabase
+                 .from("notifications")
+                 .update({ is_read: true })
+                 .eq("id", notificationId);
+
+               if (error) throw error;
+               setNotifications((prev) =>
+                 prev.map((notification) =>
+                   notification.id === notificationId
+                     ? { ...notification, is_read: true }
+                     : notification,
+                 ),
+               );
+             } catch (error) {
+               toast.error("Failed to update notification");
+             }
+           };
+
+           const markAllNotificationsAsRead = async () => {
+             const unreadNotificationIds = notifications
+               .filter((notification) => !notification.is_read)
+               .map((notification) => notification.id);
+
+             if (unreadNotificationIds.length === 0) return;
+
+             try {
+               const { error } = await supabase
+                 .from("notifications")
+                 .update({ is_read: true })
+                 .in("id", unreadNotificationIds);
+
+               if (error) throw error;
+               setNotifications((prev) =>
+                 prev.map((notification) => ({ ...notification, is_read: true })),
+               );
+               toast.success("All notifications marked as read");
+             } catch (error) {
+               toast.error("Failed to update notifications");
+             }
+           };
+
 
       return () => {
         supabase.removeChannel(bookingsSub);
@@ -999,6 +1067,12 @@ export default function OwnerDashboard() {
             >
               <Users className="h-4 w-4 mr-2" /> Booking Logs
             </TabsTrigger>
+              <TabsTrigger
+                value="notifications"
+                className="rounded-lg px-5 sm:px-8 py-3 text-sm font-semibold whitespace-nowrap data-[state=active]:bg-primary data-[state=active]:text-white data-[state=active]:shadow-sm transition-all text-slate-600"
+              >
+                <Bell className="h-4 w-4 mr-2" /> Notifications
+              </TabsTrigger>
             <TabsTrigger
               value="settings"
               className="rounded-lg px-5 sm:px-8 py-3 text-sm font-semibold whitespace-nowrap data-[state=active]:bg-primary data-[state=active]:text-white data-[state=active]:shadow-sm transition-all text-slate-600"
@@ -1123,6 +1197,109 @@ export default function OwnerDashboard() {
                 transition={{ duration: 0.2 }}
               >
                 <Card className="rounded-2xl border border-slate-200/60 bg-white shadow-md overflow-hidden">
+                          <TabsContent value="notifications" className="mt-0">
+                            <motion.div
+                              initial={{ opacity: 0, x: -20 }}
+                              animate={{ opacity: 1, x: 0 }}
+                              exit={{ opacity: 0, x: 20 }}
+                              transition={{ duration: 0.2 }}
+                            >
+                              <Card className="rounded-2xl border border-slate-200/60 bg-white shadow-md">
+                                <CardHeader className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
+                                  <div>
+                                    <CardTitle className="flex items-center gap-2">
+                                      <Bell className="h-5 w-5 text-blue-600" />
+                                      Notifications
+                                    </CardTitle>
+                                    <CardDescription>
+                                      Booking updates, payment alerts, and system messages.
+                                    </CardDescription>
+                                  </div>
+                                  <Button
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={markAllNotificationsAsRead}
+                                    disabled={notifications.every((notification) => notification.is_read)}
+                                  >
+                                    Mark all as read
+                                  </Button>
+                                </CardHeader>
+                                <CardContent>
+                                  {isLoadingNotifications ? (
+                                    <div className="py-20 flex justify-center">
+                                      <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                                    </div>
+                                  ) : notifications.length === 0 ? (
+                                    <div className="text-center py-10 border border-dashed rounded-lg bg-muted/20">
+                                      <Bell className="h-10 w-10 text-muted-foreground mx-auto mb-3 opacity-30" />
+                                      <p className="text-muted-foreground font-medium mb-2">
+                                        You have no notifications yet.
+                                      </p>
+                                      <p className="text-sm text-muted-foreground">
+                                        Booking updates and payment alerts will appear here.
+                                      </p>
+                                    </div>
+                                  ) : (
+                                    <div className="space-y-3">
+                                      {notifications.map((notification) => (
+                                        <div
+                                          key={notification.id}
+                                          className={`rounded-xl border p-4 transition-all ${
+                                            notification.is_read
+                                              ? "border-slate-200 bg-white"
+                                              : "border-blue-200 bg-blue-50/60"
+                                          }`}
+                                        >
+                                          <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
+                                            <div className="min-w-0 space-y-2">
+                                              <div className="flex items-center gap-2 flex-wrap">
+                                                <Badge
+                                                  variant="outline"
+                                                  className="capitalize text-xs"
+                                                >
+                                                  {notification.type}
+                                                </Badge>
+                                                {!notification.is_read ? (
+                                                  <Badge className="bg-blue-600 text-white text-xs">
+                                                    New
+                                                  </Badge>
+                                                ) : null}
+                                                <span className="text-xs text-slate-500">
+                                                  {new Date(notification.created_at).toLocaleString()}
+                                                </span>
+                                              </div>
+                                              <h4 className="font-semibold text-slate-900">
+                                                {notification.title}
+                                              </h4>
+                                              <p className="text-sm text-slate-600 leading-relaxed">
+                                                {notification.message}
+                                              </p>
+                                            </div>
+                                            <div className="flex flex-col gap-2 sm:items-end shrink-0">
+                                              {notification.link ? (
+                                                <Button asChild variant="outline" size="sm">
+                                                  <a href={notification.link}>Open</a>
+                                                </Button>
+                                              ) : null}
+                                              {!notification.is_read ? (
+                                                <Button
+                                                  variant="ghost"
+                                                  size="sm"
+                                                  onClick={() => markNotificationAsRead(notification.id)}
+                                                >
+                                                  Mark as read
+                                                </Button>
+                                              ) : null}
+                                            </div>
+                                          </div>
+                                        </div>
+                                      ))}
+                                    </div>
+                                  )}
+                                </CardContent>
+                              </Card>
+                            </motion.div>
+                          </TabsContent>
                   <CardHeader className="border-b border-slate-100 bg-slate-50/50">
                     <CardTitle className="text-lg font-bold text-slate-900">
                       Booking Request Logs
