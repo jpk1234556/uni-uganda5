@@ -292,39 +292,11 @@ export default function HostelDetail() {
 
       if (cartError) throw cartError;
 
-      const { data: intentId, error: intentError } = await supabase.rpc(
-        "create_checkout_intent_from_cart",
-        {
-          p_student_id: user.id,
-          p_expires_minutes: 15,
-        },
-      );
-
-      if (intentError) throw intentError;
-      if (!intentId) throw new Error("Failed to create checkout intent.");
-
-      const { error: finalizeError } = await supabase.rpc(
-        "finalize_booking_intent",
-        {
-          p_intent_id: intentId,
-          p_phone_number: bookingForm.phone_number,
-          p_course: bookingForm.course || null,
-          p_move_in_date: bookingForm.move_in_date || null,
-          p_next_of_kin: bookingForm.next_of_kin,
-          p_sponsor: bookingForm.sponsor || null,
-          p_origin: bookingForm.origin || null,
-          p_medical_history: bookingForm.medical_history || null,
-          p_special_requests: null,
-        },
-      );
-
-      if (finalizeError) throw finalizeError;
-
       toast.success(
-        "Booking request submitted via checkout flow! Waiting for owner approval.",
+        "Added to your booking cart. Review and checkout from your dashboard.",
       );
       setIsBookingOpen(false);
-      navigate("/student/dashboard");
+      navigate("/student/dashboard?tab=cart");
     } catch (error: unknown) {
       const message = getErrorMessage(error, "Booking failed");
 
@@ -766,13 +738,13 @@ export default function HostelDetail() {
       <Dialog open={isBookingOpen} onOpenChange={setIsBookingOpen}>
         <DialogContent className="sm:max-w-[425px] max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle className="text-xl">Apply for Room</DialogTitle>
+            <DialogTitle className="text-xl">Add to Booking Cart</DialogTitle>
             <DialogDescription>
-              Submit your details to reserve the{" "}
+              Save the{" "}
               <span className="font-bold text-slate-900">
                 {selectedRoom?.name}
               </span>{" "}
-              at {hostel.name}.
+              at {hostel.name} to your cart, then checkout from your dashboard.
             </DialogDescription>
           </DialogHeader>
           <form onSubmit={handleBookingSubmit} className="space-y-4 pt-4">
@@ -870,7 +842,7 @@ export default function HostelDetail() {
                 {isSubmitting ? (
                   <Loader2 className="h-4 w-4 animate-spin mr-2" />
                 ) : null}
-                Confirm Application
+                Add to Cart
               </Button>
             </DialogFooter>
           </form>

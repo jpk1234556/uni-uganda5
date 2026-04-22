@@ -37,7 +37,7 @@ const AMENITIES = [
 ];
 
 interface HostelWithRooms extends Hostel {
-  room_types?: { price: number }[];
+  room_types?: { name?: string; price: number; available: number; capacity?: number }[];
 }
 
 const parseListingPrice = (value: string | null | undefined) => {
@@ -93,6 +93,8 @@ export default function Search() {
   const [priceRange, setPriceRange] = useState([300000, 3000000]);
   const [minRating, setMinRating] = useState(0);
   const [selectedAmenities, setSelectedAmenities] = useState<string[]>([]);
+  const [selectedRoomType, setSelectedRoomType] = useState<string>("all");
+  const [availabilityFilter, setAvailabilityFilter] = useState<string>("all");
   const [sortBy, setSortBy] = useState("newest");
   const [universities, setUniversities] = useState<string[]>([]);
   const [selectedUniversity, setSelectedUniversity] = useState<string>("all");
@@ -194,7 +196,7 @@ export default function Search() {
       setIsLoading(true);
       const { data, error } = await supabase
         .from("hostels")
-        .select("*, room_types(price, available)")
+        .select("*, room_types(name, price, available, capacity)")
         .eq("status", "approved")
         .order("created_at", { ascending: false });
 
@@ -250,6 +252,27 @@ export default function Search() {
       return false;
     }
 
+    // Room Type / Category Match
+    if (selectedRoomType !== "all") {
+      const targetRoomType = selectedRoomType.toLowerCase();
+      const hasRoomType = (hostel.room_types || []).some((room) =>
+        (room.name || "").toLowerCase().includes(targetRoomType),
+      );
+      if (!hasRoomType) {
+        return false;
+      }
+    }
+
+    // Availability Match
+    if (availabilityFilter === "available-only") {
+      const hasAvailability = (hostel.room_types || []).some(
+        (room) => (room.available || 0) > 0,
+      );
+      if (!hasAvailability) {
+        return false;
+      }
+    }
+
     // Rating Match
     if (minRating > 0 && (hostel.rating || 0) < minRating) {
       return false;
@@ -283,6 +306,35 @@ export default function Search() {
     // Default: newest (created_at desc)
     return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
   });
+
+  const roomTypeOptions = Array.from(
+    new Set(
+      hostels
+        .flatMap((hostel) => hostel.room_types || [])
+        .map((room) => room.name)
+        .filter((name): name is string => Boolean(name)),
+    ),
+  ).sort((a, b) => a.localeCompare(b));
+
+  const activeFilters = [
+    searchTerm,
+    selectedUniversity !== "all" ? selectedUniversity : null,
+    selectedRoomType !== "all" ? selectedRoomType : null,
+    availabilityFilter === "available-only" ? "Available now" : null,
+    minRating > 0 ? `${minRating}+ stars` : null,
+    selectedAmenities.length > 0 ? `${selectedAmenities.length} amenities` : null,
+  ].filter(Boolean) as string[];
+
+  const resetFilters = () => {
+    setSearchTerm("");
+    setPriceRange([300000, 3000000]);
+    setMinRating(0);
+    setSelectedAmenities([]);
+    setSelectedRoomType("all");
+    setAvailabilityFilter("all");
+    setSelectedUniversity("all");
+    setSortBy("newest");
+  };
 
   return (
     <div className="container mx-auto px-4 py-8 max-w-7xl animate-in fade-in zoom-in-95 duration-500">
@@ -395,16 +447,45 @@ export default function Search() {
                     </div>
                   ))}
                 </div>
+
+                <div className="space-y-2 pt-4 border-t border-slate-200">
+                  <label className="text-sm font-bold text-slate-900">
+                    Room Type / Category
+                  </label>
+                  <Select value={selectedRoomType} onValueChange={setSelectedRoomType}>
+                    <SelectTrigger className="w-full h-11 bg-white text-slate-900 border-slate-300">
+                      <SelectValue placeholder="Any room type" />
+                    </SelectTrigger>
+                    <SelectContent className="bg-white shadow-xl z-50 border border-slate-200 max-h-72">
+                      <SelectItem value="all">All room types</SelectItem>
+                      {roomTypeOptions.map((roomType) => (
+                        <SelectItem key={roomType} value={roomType}>
+                          {roomType}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="space-y-2 pt-4 border-t border-slate-200">
+                  <label className="text-sm font-bold text-slate-900">
+                    Availability
+                  </label>
+                  <Select value={availabilityFilter} onValueChange={setAvailabilityFilter}>
+                    <SelectTrigger className="w-full h-11 bg-white text-slate-900 border-slate-300">
+                      <SelectValue placeholder="All hostels" />
+                    </SelectTrigger>
+                    <SelectContent className="bg-white shadow-xl z-50 border border-slate-200">
+                      <SelectItem value="all">All hostels</SelectItem>
+                      <SelectItem value="available-only">Available now</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
               </div>
 
               <Button
                 className="w-full mt-8 bg-gradient-primary text-white hover:opacity-90 shadow-md font-semibold"
-                onClick={() => {
-                  setSearchTerm("");
-                  setPriceRange([300000, 3000000]);
-                  setMinRating(0);
-                  setSelectedAmenities([]);
-                }}
+                onClick={resetFilters}
               >
                 Reset Filters
               </Button>
@@ -436,6 +517,18 @@ export default function Search() {
                 <p className="text-slate-700 font-semibold">
                   Showing {filteredHostels.length} available properties
                 </p>
+                {activeFilters.length > 0 ? (
+                  <div className="mt-3 flex flex-wrap gap-2">
+                    {activeFilters.map((filter) => (
+                      <span
+                        key={filter}
+                        className="inline-flex items-center rounded-full border border-slate-200 bg-slate-50 px-3 py-1 text-xs font-semibold text-slate-700"
+                      >
+                        {filter}
+                      </span>
+                    ))}
+                  </div>
+                ) : null}
               </div>
               <div className="flex items-center gap-2">
                 <span className="text-sm font-semibold text-slate-700 whitespace-nowrap">

@@ -104,6 +104,17 @@ export interface BookingIntentItem {
     created_at: string;
 }
 
+export interface Notification {
+    id: string;
+    user_id: string;
+    title: string;
+    message: string;
+    type: "payment" | "booking" | "message" | "system";
+    is_read: boolean;
+    link?: string | null;
+    created_at: string;
+}
+
 export type InventoryHoldStatus = "active" | "released" | "consumed" | "expired";
 
 export interface InventoryHold {

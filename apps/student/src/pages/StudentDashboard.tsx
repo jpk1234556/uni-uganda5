@@ -26,6 +26,7 @@ import {
   Smartphone,
   CheckCircle2,
   Heart,
+  ShoppingCart,
   Trash2,
   MapPin,
   Save,
@@ -34,14 +35,16 @@ import {
   Phone,
   HeartPulse,
   Users,
+  Bell,
 } from "lucide-react";
-import { Link } from "react-router-dom";
+import { Link, useSearchParams } from "react-router-dom";
 import { useAuth } from "@/context/AuthContext";
 import { supabase } from "@/lib/supabase";
 import { toast } from "sonner";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import type { BookingCartItem, Hostel, RoomType, Notification } from "@/types";
 
 const formatUGX = (amount: number | string | null | undefined) =>
   new Intl.NumberFormat("en-UG", {
@@ -55,9 +58,14 @@ export default function StudentDashboard() {
   const { user, dbUser } = useAuth();
   const [applications, setApplications] = useState<any[]>([]);
   const [savedHostels, setSavedHostels] = useState<any[]>([]);
+  const [cartItems, setCartItems] = useState<any[]>([]);
+  const [notifications, setNotifications] = useState<Notification[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isLoadingSaved, setIsLoadingSaved] = useState(false);
+  const [isLoadingCart, setIsLoadingCart] = useState(false);
+  const [isLoadingNotifications, setIsLoadingNotifications] = useState(false);
   const [isUpdatingProfile, setIsUpdatingProfile] = useState(false);
+  const [isCheckingOut, setIsCheckingOut] = useState(false);
 
   // Profile Form State
   const [profileForm, setProfileForm] = useState({
@@ -82,6 +90,28 @@ export default function StudentDashboard() {
   const [selectedBooking, setSelectedBooking] = useState<any | null>(null);
   const [isPaymentOpen, setIsPaymentOpen] = useState(false);
   const [isConfirming, setIsConfirming] = useState(false);
+
+  const [searchParams] = useSearchParams();
+  const [activeTab, setActiveTab] = useState(
+    searchParams.get("tab") === "cart"
+      ? "cart"
+      : searchParams.get("tab") === "notifications"
+        ? "notifications"
+        : "applications",
+  );
+
+  useEffect(() => {
+    const tab = searchParams.get("tab");
+    if (
+      tab === "applications" ||
+      tab === "saved" ||
+      tab === "profile" ||
+      tab === "cart" ||
+      tab === "notifications"
+    ) {
+      setActiveTab(tab);
+    }
+  }, [searchParams]);
 
   const fetchApplications = useCallback(async () => {
     try {
@@ -141,12 +171,89 @@ export default function StudentDashboard() {
     }
   }, [user]);
 
+  const fetchCartItems = useCallback(async () => {
+    if (!user) return;
+
+    try {
+      setIsLoadingCart(true);
+      const { data, error } = await supabase
+        .from("booking_cart_items")
+        .select(
+          `
+          id,
+          student_id,
+          hostel_id,
+          room_type_id,
+          check_in_date,
+          duration_months,
+          note,
+          created_at,
+          room_types (
+            id,
+            name,
+            price,
+            available,
+            capacity,
+            images
+          ),
+          hostels (
+            id,
+            name,
+            address,
+            university,
+            images,
+            category,
+            status
+          )
+        `,
+        )
+        .eq("student_id", user.id)
+        .order("created_at", { ascending: false });
+
+      if (error) throw error;
+      setCartItems(data || []);
+    } catch (error) {
+      console.error("Error fetching cart items:", error);
+    } finally {
+      setIsLoadingCart(false);
+    }
+  }, [user]);
+
+  const fetchNotifications = useCallback(async () => {
+    if (!user) return;
+
+    try {
+      setIsLoadingNotifications(true);
+      const { data, error } = await supabase
+        .from("notifications")
+        .select("id, user_id, title, message, type, is_read, link, created_at")
+        .eq("user_id", user.id)
+        .order("created_at", { ascending: false })
+        .limit(20);
+
+      if (error) throw error;
+      setNotifications((data || []) as Notification[]);
+    } catch (error) {
+      console.error("Error fetching notifications:", error);
+    } finally {
+      setIsLoadingNotifications(false);
+    }
+  }, [user]);
+
   useEffect(() => {
     if (user) {
       fetchApplications();
       fetchSavedHostels();
+      fetchCartItems();
+      fetchNotifications();
     }
-  }, [user, fetchApplications, fetchSavedHostels]);
+  }, [
+    user,
+    fetchApplications,
+    fetchSavedHostels,
+    fetchCartItems,
+    fetchNotifications,
+  ]);
 
   const removeFavorite = async (favoriteId: string) => {
     try {
@@ -160,6 +267,64 @@ export default function StudentDashboard() {
       toast.success("Removed from saved hostels");
     } catch (error) {
       toast.error("Failed to remove favorite");
+    }
+  };
+
+  const removeCartItem = async (cartItemId: string) => {
+    try {
+      const { error } = await supabase
+        .from("booking_cart_items")
+        .delete()
+        .eq("id", cartItemId);
+
+      if (error) throw error;
+      setCartItems((prev) => prev.filter((item) => item.id !== cartItemId));
+      toast.success("Removed from cart");
+    } catch (error) {
+      toast.error("Failed to remove cart item");
+    }
+  };
+
+  const markNotificationAsRead = async (notificationId: string) => {
+    try {
+      const { error } = await supabase
+        .from("notifications")
+        .update({ is_read: true })
+        .eq("id", notificationId);
+
+      if (error) throw error;
+      setNotifications((prev) =>
+        prev.map((notification) =>
+          notification.id === notificationId
+            ? { ...notification, is_read: true }
+            : notification,
+        ),
+      );
+    } catch (error) {
+      toast.error("Failed to update notification");
+    }
+  };
+
+  const markAllNotificationsAsRead = async () => {
+    const unreadNotificationIds = notifications
+      .filter((notification) => !notification.is_read)
+      .map((notification) => notification.id);
+
+    if (unreadNotificationIds.length === 0) return;
+
+    try {
+      const { error } = await supabase
+        .from("notifications")
+        .update({ is_read: true })
+        .in("id", unreadNotificationIds);
+
+      if (error) throw error;
+      setNotifications((prev) =>
+        prev.map((notification) => ({ ...notification, is_read: true })),
+      );
+      toast.success("All notifications marked as read");
+    } catch (error) {
+      toast.error("Failed to update notifications");
     }
   };
 
@@ -195,6 +360,65 @@ export default function StudentDashboard() {
       toast.error("Failed to submit payment confirmation: " + error.message);
     } finally {
       setIsConfirming(false);
+    }
+  };
+
+  const handleCheckoutCart = async () => {
+    if (!user || cartItems.length === 0) return;
+
+    if (!profileForm.phone_number || !profileForm.next_of_kin) {
+      toast.error("Complete your profile phone number and next of kin before checkout.");
+      setActiveTab("profile");
+      return;
+    }
+
+    try {
+      setIsCheckingOut(true);
+      const { data: intentId, error: intentError } = await supabase.rpc(
+        "create_checkout_intent_from_cart",
+        {
+          p_student_id: user.id,
+          p_expires_minutes: 15,
+        },
+      );
+
+      if (intentError) throw intentError;
+      if (!intentId) throw new Error("Failed to create checkout intent.");
+
+      const primaryCartItem = cartItems[0];
+      const durationLabel =
+        primaryCartItem.duration_months === 1
+          ? "1 month"
+          : `${primaryCartItem.duration_months} months`;
+
+      const { data: bookingCount, error: finalizeError } = await supabase.rpc(
+        "finalize_booking_intent",
+        {
+          p_intent_id: intentId,
+          p_phone_number: profileForm.phone_number,
+          p_course: profileForm.course || null,
+          p_move_in_date: primaryCartItem.check_in_date || null,
+          p_duration: durationLabel,
+          p_next_of_kin: profileForm.next_of_kin,
+          p_sponsor: null,
+          p_origin: null,
+          p_medical_history: profileForm.medical_history || null,
+          p_special_requests: null,
+        },
+      );
+
+      if (finalizeError) throw finalizeError;
+
+      toast.success(
+        `Checkout complete. ${bookingCount || cartItems.length} booking request(s) submitted for approval.`,
+      );
+      await fetchApplications();
+      await fetchCartItems();
+      setActiveTab("applications");
+    } catch (error: any) {
+      toast.error(error?.message || "Failed to checkout cart");
+    } finally {
+      setIsCheckingOut(false);
     }
   };
 
@@ -245,13 +469,25 @@ export default function StudentDashboard() {
       </div>
 
       <div className="container mx-auto px-4 max-w-5xl">
-        <Tabs defaultValue="applications" className="space-y-6">
-          <TabsList className="bg-white border border-slate-200 p-1.5 shadow-sm rounded-xl h-auto w-full grid grid-cols-1 sm:grid-cols-3 gap-1">
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
+          <TabsList className="bg-white border border-slate-200 p-1.5 shadow-sm rounded-xl h-auto w-full grid grid-cols-1 sm:grid-cols-5 gap-1">
             <TabsTrigger
               value="applications"
               className="gap-2 px-4 py-2.5 data-[state=active]:bg-blue-50 data-[state=active]:text-blue-700 rounded-lg transition-all text-xs sm:text-sm"
             >
               <ClipboardList className="h-4 w-4" /> Booking History
+            </TabsTrigger>
+            <TabsTrigger
+              value="cart"
+              className="gap-2 px-4 py-2.5 data-[state=active]:bg-blue-50 data-[state=active]:text-blue-700 rounded-lg transition-all text-xs sm:text-sm"
+            >
+              <ShoppingCart className="h-4 w-4" /> Booking Cart
+            </TabsTrigger>
+            <TabsTrigger
+              value="notifications"
+              className="gap-2 px-4 py-2.5 data-[state=active]:bg-blue-50 data-[state=active]:text-blue-700 rounded-lg transition-all text-xs sm:text-sm"
+            >
+              <Bell className="h-4 w-4" /> Notifications
             </TabsTrigger>
             <TabsTrigger
               value="saved"
@@ -354,6 +590,253 @@ export default function StudentDashboard() {
                               View
                             </Button>
                           )}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="cart">
+            <Card className="border-blue-100/50 shadow-md bg-white">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <ShoppingCart className="h-5 w-5 text-blue-600" />
+                  Your Booking Cart
+                </CardTitle>
+                <CardDescription>
+                  Review the rooms you are holding before confirming checkout.
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                {isLoadingCart ? (
+                  <div className="py-20 flex justify-center">
+                    <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                  </div>
+                ) : cartItems.length === 0 ? (
+                  <div className="text-center py-10 border border-dashed rounded-lg bg-muted/20">
+                    <ShoppingCart className="h-10 w-10 text-muted-foreground mx-auto mb-3 opacity-30" />
+                    <p className="text-muted-foreground font-medium mb-4">
+                      Your booking cart is empty.
+                    </p>
+                    <Link to="/search">
+                      <Button className="bg-blue-600 hover:bg-blue-700 text-white shadow-sm transition-all">
+                        Browse Hostels
+                      </Button>
+                    </Link>
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-1 lg:grid-cols-[1.4fr_0.9fr] gap-6">
+                    <div className="space-y-4">
+                      {cartItems.map((item) => (
+                        <div
+                          key={item.id}
+                          className="flex flex-col md:flex-row gap-4 p-4 border rounded-xl hover:shadow-md hover:border-blue-200 transition-all bg-white"
+                        >
+                          <div className="w-full md:w-28 h-24 rounded-lg overflow-hidden bg-slate-100 shrink-0">
+                            {item.hostels?.images?.[0] ? (
+                              <img
+                                src={item.hostels.images[0]}
+                                alt={item.hostels?.name}
+                                className="w-full h-full object-cover"
+                              />
+                            ) : (
+                              <div className="w-full h-full flex items-center justify-center text-[11px] text-slate-500 font-semibold px-2 text-center">
+                                No image
+                              </div>
+                            )}
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-3">
+                              <div>
+                                <h4 className="font-bold text-slate-900 truncate">
+                                  {item.hostels?.name}
+                                </h4>
+                                <p className="text-sm text-slate-600">
+                                  {item.room_types?.name || "Selected room"}
+                                </p>
+                                <p className="text-xs text-slate-500 flex items-center gap-1 mt-1">
+                                  <MapPin className="h-3 w-3" />
+                                  {item.hostels?.university || item.hostels?.address}
+                                </p>
+                              </div>
+                              <div className="text-right">
+                                <p className="text-sm font-semibold text-blue-700">
+                                  {formatUGX(item.room_types?.price)}
+                                </p>
+                                <p className="text-xs text-slate-500">
+                                  Duration: {item.duration_months} month{item.duration_months > 1 ? "s" : ""}
+                                </p>
+                              </div>
+                            </div>
+                            <div className="mt-3 flex flex-wrap gap-2 text-xs text-slate-600 font-medium">
+                              <span className="bg-slate-100 px-2.5 py-1 rounded-full">
+                                Available: {item.room_types?.available ?? "-"}
+                              </span>
+                              <span className="bg-slate-100 px-2.5 py-1 rounded-full">
+                                Capacity: {item.room_types?.capacity ?? "-"}
+                              </span>
+                              <span className="bg-slate-100 px-2.5 py-1 rounded-full">
+                                Added: {new Date(item.created_at).toLocaleDateString()}
+                              </span>
+                            </div>
+                          </div>
+                          <div className="flex items-start md:items-center">
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className="text-rose-500 hover:text-rose-600 hover:bg-rose-50 gap-1"
+                              onClick={() => removeCartItem(item.id)}
+                            >
+                              <Trash2 className="h-3 w-3" /> Remove
+                            </Button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+
+                    <Card className="border-slate-200 shadow-sm h-fit sticky top-24">
+                      <CardContent className="p-5 space-y-4">
+                        <div>
+                          <p className="text-sm text-slate-500">Summary</p>
+                          <h3 className="text-xl font-bold text-slate-900">
+                            Booking Checkout
+                          </h3>
+                        </div>
+                        <div className="space-y-3 text-sm">
+                          <div className="flex justify-between gap-3">
+                            <span className="text-slate-600">Items in cart</span>
+                            <span className="font-semibold text-slate-900">{cartItems.length}</span>
+                          </div>
+                          <div className="flex justify-between gap-3">
+                            <span className="text-slate-600">Estimated total</span>
+                            <span className="font-semibold text-slate-900">
+                              {formatUGX(
+                                cartItems.reduce(
+                                  (total, item) => total + (item.room_types?.price || 0),
+                                  0,
+                                ),
+                              )}
+                            </span>
+                          </div>
+                          <div className="flex justify-between gap-3">
+                            <span className="text-slate-600">Checkout window</span>
+                            <span className="font-semibold text-slate-900">15 minutes</span>
+                          </div>
+                        </div>
+                        <div className="rounded-lg border border-blue-100 bg-blue-50 p-3 text-xs text-blue-800 leading-relaxed">
+                          Complete your profile, then checkout to convert cart items into booking requests.
+                        </div>
+                        <Button
+                          className="w-full bg-blue-600 hover:bg-blue-700 text-white shadow-sm gap-2"
+                          onClick={handleCheckoutCart}
+                          disabled={isCheckingOut || cartItems.length === 0}
+                        >
+                          {isCheckingOut ? (
+                            <Loader2 className="h-4 w-4 animate-spin" />
+                          ) : (
+                            <CheckCircle2 className="h-4 w-4" />
+                          )}
+                          Checkout Cart
+                        </Button>
+                      </CardContent>
+                    </Card>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="notifications">
+            <Card className="border-blue-100/50 shadow-md bg-white">
+              <CardHeader className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
+                <div>
+                  <CardTitle className="flex items-center gap-2">
+                    <Bell className="h-5 w-5 text-blue-600" />
+                    Notifications
+                  </CardTitle>
+                  <CardDescription>
+                    Booking updates, approval status changes, and system messages.
+                  </CardDescription>
+                </div>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={markAllNotificationsAsRead}
+                  disabled={notifications.every((notification) => notification.is_read)}
+                >
+                  Mark all as read
+                </Button>
+              </CardHeader>
+              <CardContent>
+                {isLoadingNotifications ? (
+                  <div className="py-20 flex justify-center">
+                    <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                  </div>
+                ) : notifications.length === 0 ? (
+                  <div className="text-center py-10 border border-dashed rounded-lg bg-muted/20">
+                    <Bell className="h-10 w-10 text-muted-foreground mx-auto mb-3 opacity-30" />
+                    <p className="text-muted-foreground font-medium mb-2">
+                      You have no notifications yet.
+                    </p>
+                    <p className="text-sm text-muted-foreground">
+                      Approval updates and booking messages will appear here.
+                    </p>
+                  </div>
+                ) : (
+                  <div className="space-y-3">
+                    {notifications.map((notification) => (
+                      <div
+                        key={notification.id}
+                        className={`rounded-xl border p-4 transition-all ${
+                          notification.is_read
+                            ? "border-slate-200 bg-white"
+                            : "border-blue-200 bg-blue-50/60"
+                        }`}
+                      >
+                        <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
+                          <div className="min-w-0 space-y-2">
+                            <div className="flex items-center gap-2 flex-wrap">
+                              <Badge
+                                variant="outline"
+                                className="capitalize text-xs"
+                              >
+                                {notification.type}
+                              </Badge>
+                              {!notification.is_read ? (
+                                <Badge className="bg-blue-600 text-white text-xs">
+                                  New
+                                </Badge>
+                              ) : null}
+                              <span className="text-xs text-slate-500">
+                                {new Date(notification.created_at).toLocaleString()}
+                              </span>
+                            </div>
+                            <h4 className="font-semibold text-slate-900">
+                              {notification.title}
+                            </h4>
+                            <p className="text-sm text-slate-600 leading-relaxed">
+                              {notification.message}
+                            </p>
+                          </div>
+                          <div className="flex flex-col gap-2 sm:items-end shrink-0">
+                            {notification.link ? (
+                              <Button asChild variant="outline" size="sm">
+                                <Link to={notification.link}>Open</Link>
+                              </Button>
+                            ) : null}
+                            {!notification.is_read ? (
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => markNotificationAsRead(notification.id)}
+                              >
+                                Mark as read
+                              </Button>
+                            ) : null}
+                          </div>
                         </div>
                       </div>
                     ))}
