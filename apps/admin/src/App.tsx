@@ -5,6 +5,7 @@ import ProtectedRoute from "@/components/layout/ProtectedRoute";
 import { AuthProvider } from "@/context/AuthContext";
 import { Toaster } from "@/components/ui/sonner";
 
+const AdminDashboard = lazy(() => import("./pages/AdminDashboard"));
 const Overview = lazy(() => import("./components/admin/Overview"));
 const UsersManager = lazy(() => import("./components/admin/UsersManager"));
 const HostelsManager = lazy(() => import("./components/admin/HostelsManager"));
@@ -44,7 +45,7 @@ export default function App() {
                   <AdminLayout sidebar={<AdminSidebar />}>
                     <div className="p-4 md:p-8">
                       <Routes>
-                        <Route path="dashboard" element={<Overview />} />
+                        <Route path="dashboard" element={<AdminDashboard />} />
                         <Route path="users" element={<UsersManager />} />
                         <Route path="hostels" element={<HostelsManager />} />
                         <Route path="bookings" element={<BookingsManager />} />
