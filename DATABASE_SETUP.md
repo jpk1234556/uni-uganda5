@@ -42,6 +42,9 @@ Run these SQL files **in order** in the Supabase SQL Editor:
 - [ ] `phase13_realtime.sql` - Enable realtime subscriptions
 - [ ] `phase14_final_features.sql` - Final features and notifications
 
+### Phase 6 - Marketplace Checkout Core
+- [ ] `phase25_marketplace_checkout_core.sql` - Cart, checkout intents, inventory holds, and transactional booking finalize functions
+
 ---
 
 ## 👤 Step 2: Create Super Admin User

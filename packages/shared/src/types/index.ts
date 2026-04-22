@@ -24,6 +24,7 @@ export interface Hostel {
     images: string[] | null;
     owner_id: string;
     status: "pending" | "approved" | "rejected";
+    category?: string;
     rating?: number;
     reviews_count?: number;
     created_at: string;
@@ -61,4 +62,58 @@ export interface Booking {
     special_requests?: string;
     status: "pending" | "approved" | "rejected";
     created_at: string;
+}
+
+export interface BookingCartItem {
+    id: string;
+    student_id: string;
+    hostel_id: string;
+    room_type_id: string;
+    check_in_date?: string | null;
+    duration_months: number;
+    note?: string | null;
+    created_at: string;
+    updated_at: string;
+}
+
+export type BookingIntentStatus =
+    | "draft"
+    | "hold_created"
+    | "completed"
+    | "expired"
+    | "cancelled";
+
+export interface BookingIntent {
+    id: string;
+    student_id: string;
+    status: BookingIntentStatus;
+    expires_at: string;
+    checkout_metadata?: Record<string, unknown> | null;
+    created_at: string;
+    updated_at: string;
+}
+
+export interface BookingIntentItem {
+    id: string;
+    intent_id: string;
+    hostel_id: string;
+    room_type_id: string;
+    quantity: 1;
+    unit_price: number;
+    currency: string;
+    created_at: string;
+}
+
+export type InventoryHoldStatus = "active" | "released" | "consumed" | "expired";
+
+export interface InventoryHold {
+    id: string;
+    intent_id: string;
+    room_type_id: string;
+    student_id: string;
+    quantity: number;
+    status: InventoryHoldStatus;
+    expires_at: string;
+    created_at: string;
+    updated_at: string;
 }
