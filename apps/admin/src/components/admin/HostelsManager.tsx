@@ -34,9 +34,19 @@ import {
 import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/context/AuthContext";
 import { toast } from "sonner";
-import type { Hostel } from "@/types";
+import type { Hostel, DBUser, RoomType } from "@/types";
 import { motion } from "motion/react";
 import { cn } from "@/lib/utils";
+import { Skeleton } from "@/components/ui/skeleton";
+import ImageWorker from "../../lib/imageWorker?worker";
+
+interface HostelWithOwner extends Hostel {
+  users?: {
+    first_name: string;
+    last_name: string;
+    email: string;
+  } | null;
+}
 
 const formatUGX = (amount: number | string | null | undefined) =>
   new Intl.NumberFormat("en-UG", {
@@ -74,8 +84,8 @@ const comparePrices = (left: number, right: number, ascending: boolean) => {
 export default function HostelsManager() {
   const { user, dbUser } = useAuth();
 
-  const [hostels, setHostels] = useState<any[]>([]);
-  const [owners, setOwners] = useState<any[]>([]);
+  const [hostels, setHostels] = useState<HostelWithOwner[]>([]);
+  const [owners, setOwners] = useState<DBUser[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
   // Create Property State
@@ -109,7 +119,7 @@ export default function HostelsManager() {
 
   // Manage Rooms State
   const [selectedHostel, setSelectedHostel] = useState<Hostel | null>(null);
-  const [rooms, setRooms] = useState<any[]>([]);
+  const [rooms, setRooms] = useState<RoomType[]>([]);
   const [isRoomDialogOpen, setIsRoomDialogOpen] = useState(false);
   const [isLoadingRooms, setIsLoadingRooms] = useState(false);
   const [newRoom, setNewRoom] = useState({
@@ -197,36 +207,30 @@ export default function HostelsManager() {
     });
 
   const optimizeImageFileToDataUrl = async (file: File): Promise<string> => {
-    const objectUrl = URL.createObjectURL(file);
-    try {
-      const image = await new Promise<HTMLImageElement>((resolve, reject) => {
-        const img = new Image();
-        img.onload = () => resolve(img);
-        img.onerror = () => reject(new Error(`Failed to decode ${file.name}`));
-        img.src = objectUrl;
-      });
-
-      const maxDimension = 1280;
-      const scale = Math.min(
-        1,
-        maxDimension / Math.max(image.width || 1, image.height || 1),
-      );
-      const width = Math.max(1, Math.round(image.width * scale));
-      const height = Math.max(1, Math.round(image.height * scale));
-
-      const canvas = document.createElement("canvas");
-      canvas.width = width;
-      canvas.height = height;
-
-      const context = canvas.getContext("2d");
-      if (!context) return readFileAsDataUrl(file);
-      context.drawImage(image, 0, 0, width, height);
-
-      // JPEG output keeps upload payloads small and speeds up read/render.
-      return canvas.toDataURL("image/jpeg", 0.82);
-    } finally {
-      URL.revokeObjectURL(objectUrl);
-    }
+    return new Promise((resolve, reject) => {
+      const worker = new ImageWorker();
+      const id = Math.random().toString(36).substring(7);
+      
+      worker.onmessage = (e) => {
+        if (e.data.id !== id) return;
+        if (e.data.success) {
+          const reader = new FileReader();
+          reader.onload = () => resolve(String(reader.result || ""));
+          reader.onerror = () => reject(new Error("Failed to read processed blob"));
+          reader.readAsDataURL(e.data.blob);
+        } else {
+          readFileAsDataUrl(file).then(resolve).catch(reject);
+        }
+        worker.terminate();
+      };
+      
+      worker.onerror = () => {
+        readFileAsDataUrl(file).then(resolve).catch(reject);
+        worker.terminate();
+      };
+      
+      worker.postMessage({ id, file });
+    });
   };
 
   const handleIncomingFiles = async (incoming: FileList | null) => {
@@ -1240,11 +1244,11 @@ export default function HostelsManager() {
         <Card className="border-slate-200 rounded-2xl shadow-sm bg-white overflow-hidden">
           <CardContent className="p-0">
             {isLoading ? (
-              <div className="py-24 flex flex-col items-center justify-center">
-                <Loader2 className="h-8 w-8 animate-spin text-primary mb-3" />
-                <span className="text-sm font-medium text-slate-500">
-                  Loading Inventory Data...
-                </span>
+              <div className="py-24 px-6 space-y-4">
+                <Skeleton className="h-11 w-full" />
+                <Skeleton className="h-16 w-full" />
+                <Skeleton className="h-16 w-full" />
+                <Skeleton className="h-16 w-full" />
               </div>
             ) : (
               <Table>
@@ -1419,11 +1423,10 @@ export default function HostelsManager() {
                 Existing Inventory Types
               </h4>
               {isLoadingRooms ? (
-                <div className="py-10 flex flex-col justify-center items-center">
-                  <Loader2 className="h-8 w-8 animate-spin text-primary mb-2" />
-                  <span className="text-sm text-slate-500">
-                    Loading units...
-                  </span>
+                <div className="py-10 space-y-3">
+                  <Skeleton className="h-10 w-full" />
+                  <Skeleton className="h-12 w-full" />
+                  <Skeleton className="h-12 w-full" />
                 </div>
               ) : rooms.length === 0 ? (
                 <p className="text-sm text-slate-500 bg-slate-50 rounded-xl py-8 border border-dashed border-slate-200 text-center font-medium">

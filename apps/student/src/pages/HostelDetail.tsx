@@ -37,15 +37,16 @@ import {
 import { cn } from "@/lib/utils";
 import type { Hostel, RoomType } from "@/types";
 import { toast } from "sonner";
-import { Helmet } from "react-helmet-async";
 import { Skeleton } from "@/components/ui/skeleton";
+import { useAuth } from "@/context/AuthContext";
+import { supabase } from "@/lib/supabase";
 
 interface HostelWithOwner extends Hostel {
   users?: {
     first_name: string;
     last_name: string;
     email: string;
-  } | null;
+  } | undefined;
 }
 
 interface ReviewWithUser {
@@ -465,28 +466,6 @@ export default function HostelDetail() {
 
   return (
     <div className="min-h-screen bg-slate-50 pb-20">
-      <Helmet>
-        <title>{hostel.name} | UniNest</title>
-        <meta name="description" content={hostel.description?.substring(0, 160) || `Book a room at ${hostel.name} on UniNest.`} />
-        {validImages[0] && <link rel="preload" as="image" href={validImages[0]} />}
-        <script type="application/ld+json">
-          {JSON.stringify({
-            "@context": "https://schema.org",
-            "@type": "Hostel",
-            "name": hostel.name,
-            "description": hostel.description || `Student accommodation at ${hostel.university}`,
-            "image": validImages,
-            "address": hostel.address,
-            "aggregateRating": hostel.rating ? {
-              "@type": "AggregateRating",
-              "ratingValue": hostel.rating,
-              "reviewCount": hostel.reviews_count || 1
-            } : undefined,
-            "priceRange": hostel.price_range || "$$"
-          })}
-        </script>
-      </Helmet>
-      
       {/* Hidden preloads for next images */}
       <div className="hidden">
         {validImages.slice(1).map((img, i) => (
