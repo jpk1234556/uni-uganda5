@@ -1,8 +1,15 @@
 import { useState, useEffect, useCallback } from "react";
-import { useParams, Link, useNavigate } from "react-router-dom";
+import { useParams, Link, useNavigate, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import {
   Dialog,
   DialogContent,
@@ -68,6 +75,11 @@ const shouldFallbackToLegacyBooking = (message: string) =>
     message,
   );
 
+const shouldFallbackToCartBooking = (message: string) =>
+  /booking_cart_items|booking_intents|inventory_holds|create_checkout_intent_from_cart|finalize_booking_intent|phase25|42P01|PGRST202|function/i.test(
+    message,
+  );
+
 const formatUGX = (amount: number | string | null | undefined) =>
   new Intl.NumberFormat("en-UG", {
     style: "currency",
@@ -80,6 +92,7 @@ export default function HostelDetail() {
   const { id } = useParams();
   const { user, dbUser } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
 
   const [hostel, setHostel] = useState<HostelWithOwner | null>(null);
   const [rooms, setRooms] = useState<RoomType[]>([]);
@@ -99,6 +112,7 @@ export default function HostelDetail() {
     sponsor: "",
     origin: "",
     medical_history: "",
+    special_requests: "",
   });
 
   // Review State
@@ -223,6 +237,20 @@ export default function HostelDetail() {
     }
   }, [id, fetchHostelData]);
 
+  useEffect(() => {
+    if (!rooms.length || selectedRoom) return;
+
+    const params = new URLSearchParams(location.search);
+    const selectedRoomId = params.get("bookRoom");
+    if (!selectedRoomId) return;
+
+    const room = rooms.find((item) => item.id === selectedRoomId);
+    if (room) {
+      setSelectedRoom(room);
+      setIsBookingOpen(true);
+    }
+  }, [location.search, rooms, selectedRoom]);
+
   const handleBookClick = (room: RoomType) => {
     if (!hostel || !id) return;
 
@@ -269,57 +297,66 @@ export default function HostelDetail() {
         sponsor: bookingForm.sponsor,
         origin: bookingForm.origin,
         medical_history: bookingForm.medical_history,
+        special_requests: bookingForm.special_requests,
         status: "pending",
       });
 
       if (error) throw error;
     };
 
+    const submitCartBooking = async () => {
+      const { error } = await supabase.from("booking_cart_items").upsert(
+        {
+          student_id: user.id,
+          hostel_id: hostel.id,
+          room_type_id: selectedRoom.id,
+          check_in_date: bookingForm.move_in_date || null,
+          duration_months: 1,
+          note: JSON.stringify({
+            phone_number: bookingForm.phone_number,
+            course: bookingForm.course,
+            next_of_kin: bookingForm.next_of_kin,
+            sponsor: bookingForm.sponsor,
+            origin: bookingForm.origin,
+            medical_history: bookingForm.medical_history,
+            special_requests: bookingForm.special_requests,
+          }),
+        },
+        { onConflict: "student_id,room_type_id" },
+      );
+
+      if (error) throw error;
+    };
+
     try {
       setIsSubmitting(true);
-      const { error: cartError } = await supabase
-        .from("booking_cart_items")
-        .upsert(
-          {
-            student_id: user.id,
-            hostel_id: hostel.id,
-            room_type_id: selectedRoom.id,
-            check_in_date: bookingForm.move_in_date || null,
-            duration_months: 1,
-          },
-          { onConflict: "student_id,room_type_id" },
-        );
+      await submitLegacyBooking();
 
-      if (cartError) throw cartError;
-
-      toast.success(
-        "Added to your booking cart. Review and checkout from your dashboard.",
-      );
+      toast.success("Booking request submitted! Waiting for owner approval.");
       setIsBookingOpen(false);
-      navigate("/student/dashboard?tab=cart");
+      navigate("/student/dashboard");
     } catch (error: unknown) {
       const message = getErrorMessage(error, "Booking failed");
 
-      if (shouldFallbackToLegacyBooking(message)) {
+      if (shouldFallbackToCartBooking(message)) {
         try {
-          await submitLegacyBooking();
+          await submitCartBooking();
           toast.success(
-            "Booking request submitted! Waiting for owner approval.",
+            "Added to your booking cart. Review and checkout from your dashboard.",
           );
           setIsBookingOpen(false);
-          navigate("/student/dashboard");
+          navigate("/student/dashboard?tab=cart");
           return;
-        } catch (legacyError: unknown) {
-          const legacyMessage = getErrorMessage(
-            legacyError,
-            "Booking failed",
-          );
-          if (/row-level security|permission denied|policy/i.test(legacyMessage)) {
+        } catch (cartError: unknown) {
+          const cartMessage = getErrorMessage(cartError, "Booking failed");
+          if (
+            /row-level security|permission denied|policy/i.test(cartMessage)
+          ) {
             toast.error(
               "Booking is blocked by database permissions. Run phase22_booking_enablement.sql in Supabase and try again.",
             );
           } else {
-            toast.error(legacyMessage);
+            toast.error(cartMessage);
           }
           return;
         }
@@ -364,9 +401,7 @@ export default function HostelDetail() {
   };
 
   const images =
-    hostel?.images && hostel.images.length > 0
-      ? hostel.images
-      : [];
+    hostel?.images && hostel.images.length > 0 ? hostel.images : [];
 
   const validImages = images.filter(Boolean);
 
@@ -480,7 +515,7 @@ export default function HostelDetail() {
                   className="text-white border-white/50 backdrop-blur-md bg-black/20"
                 >
                   <Star className="h-3 w-3 mr-1 text-amber-400 fill-amber-400" />
-                    {(hostel.rating || 0) > 0 ? hostel.rating : "-"}
+                  {(hostel.rating || 0) > 0 ? hostel.rating : "-"}
                 </Badge>
               </div>
               <h1 className="text-3xl md:text-5xl font-bold tracking-tight mb-2 drop-shadow-md">
@@ -542,13 +577,16 @@ export default function HostelDetail() {
                   Available Room Types
                 </h3>
                 <div className="text-sm font-semibold text-slate-700 bg-white border border-slate-200 rounded-lg px-3 py-1.5 w-fit">
-                  Rooms available now: {rooms.filter((r) => r.available > 0).length}/{rooms.length}
+                  Rooms available now:{" "}
+                  {rooms.filter((r) => r.available > 0).length}/{rooms.length}
                 </div>
               </div>
               {rooms.length === 0 ? (
                 <div className="p-8 text-center bg-white rounded-2xl border border-dashed border-slate-300 text-slate-500">
                   <Building className="h-10 w-10 mx-auto mb-3 opacity-30" />
-                  <p className="font-medium">The owner has not listed any room types yet.</p>
+                  <p className="font-medium">
+                    The owner has not listed any room types yet.
+                  </p>
                 </div>
               ) : (
                 <div className="grid grid-cols-1 gap-4">
@@ -575,7 +613,9 @@ export default function HostelDetail() {
 
                           <div className="p-5">
                             <div className="flex flex-wrap items-center gap-2 mb-2">
-                              <h4 className="text-lg font-bold text-slate-900">{room.name}</h4>
+                              <h4 className="text-lg font-bold text-slate-900">
+                                {room.name}
+                              </h4>
                               <Badge
                                 variant="outline"
                                 className={cn(
@@ -590,14 +630,19 @@ export default function HostelDetail() {
                             </div>
 
                             {room.description ? (
-                              <p className="text-sm text-slate-700 mb-3 leading-relaxed">{room.description}</p>
+                              <p className="text-sm text-slate-700 mb-3 leading-relaxed">
+                                {room.description}
+                              </p>
                             ) : (
-                              <p className="text-sm text-slate-500 mb-3">Comfortable room option with standard amenities.</p>
+                              <p className="text-sm text-slate-500 mb-3">
+                                Comfortable room option with standard amenities.
+                              </p>
                             )}
 
                             <div className="flex flex-wrap gap-2">
                               <span className="inline-flex items-center gap-1 rounded-md border border-slate-200 bg-slate-50 px-2.5 py-1 text-xs font-semibold text-slate-700">
-                                <Users className="h-3.5 w-3.5" /> Capacity: {room.capacity}
+                                <Users className="h-3.5 w-3.5" /> Capacity:{" "}
+                                {room.capacity}
                               </span>
                               <span className="inline-flex items-center rounded-md border border-slate-200 bg-slate-50 px-2.5 py-1 text-xs font-semibold text-slate-700">
                                 Slots left: {room.available}
@@ -606,11 +651,15 @@ export default function HostelDetail() {
                           </div>
 
                           <div className="p-5 md:border-l border-slate-200 flex md:flex-col items-center md:items-end justify-between gap-3 bg-slate-50/60">
-                            <div className="text-2xl font-black text-primary">{formatUGX(room.price)}</div>
+                            <div className="text-2xl font-black text-primary">
+                              {formatUGX(room.price)}
+                            </div>
                             <Button
                               onClick={() => handleBookClick(room)}
                               disabled={room.available === 0}
-                              variant={room.available > 0 ? "default" : "secondary"}
+                              variant={
+                                room.available > 0 ? "default" : "secondary"
+                              }
                               className={cn(
                                 "w-full md:w-32 font-semibold shadow-sm",
                                 room.available > 0
@@ -618,7 +667,7 @@ export default function HostelDetail() {
                                   : "bg-slate-200 text-slate-500 cursor-not-allowed",
                               )}
                             >
-                              {room.available > 0 ? "Book Room" : "Full"}
+                              {room.available > 0 ? "Select Room" : "Full"}
                             </Button>
                           </div>
                         </div>
@@ -736,18 +785,50 @@ export default function HostelDetail() {
 
       {/* Booking Dialog */}
       <Dialog open={isBookingOpen} onOpenChange={setIsBookingOpen}>
-        <DialogContent className="sm:max-w-[425px] max-h-[90vh] overflow-y-auto">
+        <DialogContent className="sm:max-w-[640px] max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle className="text-xl">Add to Booking Cart</DialogTitle>
+            <DialogTitle className="text-xl">Request a Booking</DialogTitle>
             <DialogDescription>
-              Save the{" "}
-              <span className="font-bold text-slate-900">
-                {selectedRoom?.name}
-              </span>{" "}
-              at {hostel.name} to your cart, then checkout from your dashboard.
+              Select a room, share your details, and send a booking request for{" "}
+              <span className="font-bold text-slate-900">{hostel.name}</span>.
             </DialogDescription>
           </DialogHeader>
           <form onSubmit={handleBookingSubmit} className="space-y-4 pt-4">
+            <div className="space-y-2">
+              <Label htmlFor="room">Room Type</Label>
+              <Select
+                value={selectedRoom?.id || ""}
+                onValueChange={(value) => {
+                  const room = rooms.find((item) => item.id === value);
+                  if (room) setSelectedRoom(room);
+                }}
+              >
+                <SelectTrigger id="room" className="w-full h-11">
+                  <SelectValue placeholder="Choose a room" />
+                </SelectTrigger>
+                <SelectContent>
+                  {rooms.map((room) => (
+                    <SelectItem key={room.id} value={room.id}>
+                      {room.name} - {formatUGX(room.price)} - Capacity{" "}
+                      {room.capacity} - {room.available} left
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              {selectedRoom ? (
+                <div className="rounded-xl border border-slate-200 bg-slate-50 p-3 text-sm text-slate-700">
+                  <div className="font-semibold text-slate-900">
+                    {selectedRoom.name}
+                  </div>
+                  <div className="mt-1 flex flex-wrap gap-3">
+                    <span>Price: {formatUGX(selectedRoom.price)}</span>
+                    <span>Capacity: {selectedRoom.capacity}</span>
+                    <span>Available: {selectedRoom.available}</span>
+                  </div>
+                </div>
+              ) : null}
+            </div>
+
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="phone">Phone Number</Label>
@@ -820,6 +901,17 @@ export default function HostelDetail() {
               </div>
             </div>
             <div className="space-y-2">
+              <Label htmlFor="origin">Home District / Origin</Label>
+              <Input
+                id="origin"
+                placeholder="e.g. Gulu, Uganda"
+                value={bookingForm.origin}
+                onChange={(e) =>
+                  setBookingForm({ ...bookingForm, origin: e.target.value })
+                }
+              />
+            </div>
+            <div className="space-y-2">
               <Label htmlFor="med">Any Medical Conditions? (Optional)</Label>
               <Input
                 id="med"
@@ -832,6 +924,21 @@ export default function HostelDetail() {
                   })
                 }
               />
+              <div className="space-y-2">
+                <Label htmlFor="requests">Special Requests (Optional)</Label>
+                <Textarea
+                  id="requests"
+                  placeholder="Accessibility, roommates, or other notes"
+                  value={bookingForm.special_requests}
+                  onChange={(e) =>
+                    setBookingForm({
+                      ...bookingForm,
+                      special_requests: e.target.value,
+                    })
+                  }
+                  className="min-h-[96px]"
+                />
+              </div>
             </div>
             <DialogFooter className="mt-6">
               <Button
@@ -842,7 +949,7 @@ export default function HostelDetail() {
                 {isSubmitting ? (
                   <Loader2 className="h-4 w-4 animate-spin mr-2" />
                 ) : null}
-                Add to Cart
+                Submit Booking Request
               </Button>
             </DialogFooter>
           </form>
