@@ -261,7 +261,9 @@ export default function HostelDetail() {
       return;
     }
 
-    if (dbUser?.role !== "student") {
+    // Allow the flow while profile metadata is still loading.
+    // Only block when we explicitly know the account role is not student.
+    if (dbUser && dbUser.role !== "student") {
       toast.error("Only student accounts can book rooms.");
       navigate("/student/dashboard");
       return;
