@@ -35,10 +35,10 @@ import {
   ChevronRight,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { supabase } from "@/lib/supabase";
-import { useAuth } from "@/context/AuthContext";
 import type { Hostel, RoomType } from "@/types";
 import { toast } from "sonner";
+import { Helmet } from "react-helmet-async";
+import { Skeleton } from "@/components/ui/skeleton";
 
 interface HostelWithOwner extends Hostel {
   users?: {
@@ -426,8 +426,24 @@ export default function HostelDetail() {
 
   if (isLoading) {
     return (
-      <div className="container mx-auto px-4 py-20 flex justify-center items-center min-h-[60vh]">
-        <Loader2 className="h-10 w-10 animate-spin text-primary" />
+      <div className="min-h-screen bg-slate-50 pb-20">
+        <Skeleton className="w-full h-[40vh] md:h-[60vh] rounded-none" />
+        <div className="container mx-auto px-4 mt-8">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            <div className="lg:col-span-2 space-y-8">
+              <Skeleton className="h-40 w-full rounded-2xl" />
+              <Skeleton className="h-[300px] w-full rounded-2xl" />
+              <div className="space-y-4">
+                <Skeleton className="h-8 w-1/3" />
+                <Skeleton className="h-32 w-full rounded-2xl" />
+                <Skeleton className="h-32 w-full rounded-2xl" />
+              </div>
+            </div>
+            <div className="space-y-6">
+              <Skeleton className="h-64 w-full rounded-2xl" />
+            </div>
+          </div>
+        </div>
       </div>
     );
   }
@@ -449,6 +465,35 @@ export default function HostelDetail() {
 
   return (
     <div className="min-h-screen bg-slate-50 pb-20">
+      <Helmet>
+        <title>{hostel.name} | UniNest</title>
+        <meta name="description" content={hostel.description?.substring(0, 160) || `Book a room at ${hostel.name} on UniNest.`} />
+        {validImages[0] && <link rel="preload" as="image" href={validImages[0]} />}
+        <script type="application/ld+json">
+          {JSON.stringify({
+            "@context": "https://schema.org",
+            "@type": "Hostel",
+            "name": hostel.name,
+            "description": hostel.description || `Student accommodation at ${hostel.university}`,
+            "image": validImages,
+            "address": hostel.address,
+            "aggregateRating": hostel.rating ? {
+              "@type": "AggregateRating",
+              "ratingValue": hostel.rating,
+              "reviewCount": hostel.reviews_count || 1
+            } : undefined,
+            "priceRange": hostel.price_range || "$$"
+          })}
+        </script>
+      </Helmet>
+      
+      {/* Hidden preloads for next images */}
+      <div className="hidden">
+        {validImages.slice(1).map((img, i) => (
+          <img key={i} src={img} loading="lazy" decoding="async" alt="" />
+        ))}
+      </div>
+
       {/* Hero Image Section with Carousel */}
       <div className="w-full h-[40vh] md:h-[60vh] relative bg-slate-200 group">
         {activeImage ? (
@@ -655,12 +700,12 @@ export default function HostelDetail() {
                             </div>
                             <Button
                               onClick={() => handleBookClick(room)}
-                              disabled={room.available === 0}
+                              disabled={!room.available || room.available <= 0}
                               variant={
                                 room.available > 0 ? "default" : "secondary"
                               }
                               className={cn(
-                                "w-full md:w-32 font-semibold shadow-sm",
+                                "w-full md:w-32 font-semibold shadow-sm cursor-pointer",
                                 room.available > 0
                                   ? "bg-primary hover:bg-primary/90 text-white"
                                   : "bg-slate-200 text-slate-500 cursor-not-allowed",
