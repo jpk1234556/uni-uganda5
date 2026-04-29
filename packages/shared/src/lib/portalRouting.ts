@@ -1,4 +1,5 @@
 import type { UserRole } from "@/types";
+import { portalRoutes } from "./routes";
 
 type PortalUrlConfig = {
   student: string;

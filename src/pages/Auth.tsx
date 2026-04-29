@@ -16,6 +16,7 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
 import BrandMark from "@/components/layout/BrandMark";
+import { appRoutes } from "@/lib/routes";
 
 export default function Auth() {
   const [searchParams] = useSearchParams();
@@ -26,7 +27,7 @@ export default function Auth() {
 
   // Redirect if already logged in
   if (user) {
-    navigate("/");
+    navigate(appRoutes.home);
     return null;
   }
 
@@ -46,7 +47,7 @@ export default function Auth() {
       toast.error(error.message);
     } else {
       toast.success("Logged in successfully!");
-      navigate("/");
+      navigate(appRoutes.home);
     }
     setIsLoading(false);
   };

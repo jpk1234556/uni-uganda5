@@ -2,6 +2,7 @@ import { Search as SearchIcon, Filter, MapPin, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import BrandMark from "@/components/layout/BrandMark";
+import { appRoutes } from "@/lib/routes";
 
 export default function Search() {
   return (
@@ -59,7 +60,9 @@ export default function Search() {
                     className="h-12 w-full rounded-xl border border-border bg-background pl-11 pr-4 text-sm outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20"
                   />
                 </div>
-                <Button className="h-12 px-6">Search hostels</Button>
+                <Link to={appRoutes.search}>
+                  <Button className="h-12 px-6">Search hostels</Button>
+                </Link>
               </div>
             </CardContent>
           </Card>

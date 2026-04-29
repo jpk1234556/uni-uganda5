@@ -5,6 +5,7 @@ import Navbar from "@/components/layout/Navbar";
 import Footer from "@/components/layout/Footer";
 import ProtectedRoute from "@/components/layout/ProtectedRoute";
 import { AuthProvider } from "@/context/AuthContext";
+import { appRoutes } from "@/lib/routes";
 
 const Home = lazy(() => import("@/pages/Home"));
 const Search = lazy(() => import("@/pages/Search"));
@@ -34,19 +35,25 @@ function App() {
           <main className="flex-1">
             <Suspense fallback={routeFallback}>
               <Routes>
-                <Route path="/" element={<Home />} />
-                <Route path="/search" element={<Search />} />
-                <Route path="/faq" element={<Faq />} />
-                <Route path="/roommates" element={<Roommates />} />
+                <Route path={appRoutes.home} element={<Home />} />
+                <Route path={appRoutes.search} element={<Search />} />
+                <Route path={appRoutes.faq} element={<Faq />} />
+                <Route path={appRoutes.roommates} element={<Roommates />} />
                 <Route path="/hostel/:id" element={<HostelDetail />} />
-                <Route path="/auth" element={<Auth />} />
-                <Route path="/verify-email" element={<VerifyEmail />} />
-                <Route path="/forgot-password" element={<ForgotPassword />} />
-                <Route path="/reset-password" element={<ResetPassword />} />
+                <Route path={appRoutes.auth} element={<Auth />} />
+                <Route path={appRoutes.verifyEmail} element={<VerifyEmail />} />
+                <Route
+                  path={appRoutes.forgotPassword}
+                  element={<ForgotPassword />}
+                />
+                <Route
+                  path={appRoutes.resetPassword}
+                  element={<ResetPassword />}
+                />
 
                 {/* Protected Routes */}
                 <Route
-                  path="/student/dashboard"
+                  path={appRoutes.studentDashboard}
                   element={
                     <ProtectedRoute allowedRoles={["student"]}>
                       <StudentDashboard />
@@ -54,7 +61,7 @@ function App() {
                   }
                 />
                 <Route
-                  path="/owner/dashboard"
+                  path={appRoutes.ownerDashboard}
                   element={
                     <ProtectedRoute
                       allowedRoles={["hostel_owner", "super_admin"]}
@@ -64,7 +71,7 @@ function App() {
                   }
                 />
                 <Route
-                  path="/admin/dashboard"
+                  path={appRoutes.adminDashboard}
                   element={
                     <ProtectedRoute allowedRoles={["super_admin"]}>
                       <AdminDashboard />

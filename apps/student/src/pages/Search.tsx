@@ -37,8 +37,15 @@ const AMENITIES = [
 ];
 
 interface HostelWithRooms extends Hostel {
-  room_types?: { name?: string; price: number; available: number; capacity?: number }[];
+  room_types?: {
+    name?: string;
+    price: number;
+    available: number;
+    capacity?: number;
+  }[];
 }
+
+type SortOption = "newest" | "price-asc" | "price-desc" | "rating-desc";
 
 const parseListingPrice = (value: string | null | undefined) => {
   if (!value) return Infinity;
@@ -64,6 +71,17 @@ const getListingMinPrice = (hostel: HostelWithRooms) => {
   }
 
   return parseListingPrice(hostel.price_range);
+};
+
+const comparePrices = (left: number, right: number, ascending: boolean) => {
+  const leftMissing = left === Infinity;
+  const rightMissing = right === Infinity;
+
+  if (leftMissing && rightMissing) return 0;
+  if (leftMissing) return 1;
+  if (rightMissing) return -1;
+
+  return ascending ? left - right : right - left;
 };
 
 const matchesAmenities = (
@@ -95,7 +113,7 @@ export default function Search() {
   const [selectedAmenities, setSelectedAmenities] = useState<string[]>([]);
   const [selectedRoomType, setSelectedRoomType] = useState<string>("all");
   const [availabilityFilter, setAvailabilityFilter] = useState<string>("all");
-  const [sortBy, setSortBy] = useState("newest");
+  const [sortBy, setSortBy] = useState<SortOption>("newest");
   const [universities, setUniversities] = useState<string[]>([]);
   const [selectedUniversity, setSelectedUniversity] = useState<string>("all");
 
@@ -291,14 +309,10 @@ export default function Search() {
 
   const sortedHostels = [...filteredHostels].sort((a, b) => {
     if (sortBy === "price-asc") {
-      const minA = getListingMinPrice(a);
-      const minB = getListingMinPrice(b);
-      return minA - minB;
+      return comparePrices(getListingMinPrice(a), getListingMinPrice(b), true);
     }
     if (sortBy === "price-desc") {
-      const minA = getListingMinPrice(a);
-      const minB = getListingMinPrice(b);
-      return minB - minA;
+      return comparePrices(getListingMinPrice(a), getListingMinPrice(b), false);
     }
     if (sortBy === "rating-desc") {
       return (b.rating || 0) - (a.rating || 0);
@@ -322,7 +336,9 @@ export default function Search() {
     selectedRoomType !== "all" ? selectedRoomType : null,
     availabilityFilter === "available-only" ? "Available now" : null,
     minRating > 0 ? `${minRating}+ stars` : null,
-    selectedAmenities.length > 0 ? `${selectedAmenities.length} amenities` : null,
+    selectedAmenities.length > 0
+      ? `${selectedAmenities.length} amenities`
+      : null,
   ].filter(Boolean) as string[];
 
   const resetFilters = () => {
@@ -452,7 +468,10 @@ export default function Search() {
                   <label className="text-sm font-bold text-slate-900">
                     Room Type / Category
                   </label>
-                  <Select value={selectedRoomType} onValueChange={setSelectedRoomType}>
+                  <Select
+                    value={selectedRoomType}
+                    onValueChange={setSelectedRoomType}
+                  >
                     <SelectTrigger className="w-full h-11 bg-white text-slate-900 border-slate-300">
                       <SelectValue placeholder="Any room type" />
                     </SelectTrigger>
@@ -471,13 +490,18 @@ export default function Search() {
                   <label className="text-sm font-bold text-slate-900">
                     Availability
                   </label>
-                  <Select value={availabilityFilter} onValueChange={setAvailabilityFilter}>
+                  <Select
+                    value={availabilityFilter}
+                    onValueChange={setAvailabilityFilter}
+                  >
                     <SelectTrigger className="w-full h-11 bg-white text-slate-900 border-slate-300">
                       <SelectValue placeholder="All hostels" />
                     </SelectTrigger>
                     <SelectContent className="bg-white shadow-xl z-50 border border-slate-200">
                       <SelectItem value="all">All hostels</SelectItem>
-                      <SelectItem value="available-only">Available now</SelectItem>
+                      <SelectItem value="available-only">
+                        Available now
+                      </SelectItem>
                     </SelectContent>
                   </Select>
                 </div>

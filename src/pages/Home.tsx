@@ -2,6 +2,7 @@ import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
 import { Search, Shield, Star, Building2 } from "lucide-react";
 import BrandMark from "@/components/layout/BrandMark";
+import { appRoutes } from "@/lib/routes";
 
 export default function Home() {
   return (
@@ -32,12 +33,12 @@ export default function Home() {
                 listings, better filters, and a cleaner path to booking.
               </p>
               <div className="mt-8 flex flex-col gap-3 sm:flex-row">
-                <Link to="/search">
+                <Link to={appRoutes.search}>
                   <Button size="lg" className="h-12 px-8 text-base">
                     Start searching
                   </Button>
                 </Link>
-                <Link to="/auth?mode=signup">
+                <Link to={`${appRoutes.auth}?mode=signup`}>
                   <Button
                     size="lg"
                     variant="secondary"

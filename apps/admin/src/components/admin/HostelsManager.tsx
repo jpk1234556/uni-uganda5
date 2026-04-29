@@ -46,6 +46,31 @@ const formatUGX = (amount: number | string | null | undefined) =>
     maximumFractionDigits: 0,
   }).format(Number(amount ?? 0));
 
+type SortOption = "newest" | "price-asc" | "price-desc" | "rating-desc";
+
+const parseHostelPrice = (value: string | null | undefined) => {
+  if (!value) return Infinity;
+
+  const match = value
+    .toString()
+    .replace(/,/g, "")
+    .match(/\d+(?:\.\d+)?/g);
+  if (!match || match.length === 0) return Infinity;
+
+  return Number(match[0]);
+};
+
+const comparePrices = (left: number, right: number, ascending: boolean) => {
+  const leftMissing = left === Infinity;
+  const rightMissing = right === Infinity;
+
+  if (leftMissing && rightMissing) return 0;
+  if (leftMissing) return 1;
+  if (rightMissing) return -1;
+
+  return ascending ? left - right : right - left;
+};
+
 export default function HostelsManager() {
   const { user, dbUser } = useAuth();
 
@@ -63,6 +88,7 @@ export default function HostelsManager() {
   const [createdHostelId, setCreatedHostelId] = useState<string | null>(null);
 
   const [selectedUniversity, setSelectedUniversity] = useState<string>("all");
+  const [sortBy, setSortBy] = useState<SortOption>("newest");
   const [universities, setUniversities] = useState<string[]>([]);
   const [newHostel, setNewHostel] = useState({
     name: "",
@@ -257,7 +283,9 @@ export default function HostelsManager() {
         imageFiles.map((file) => optimizeImageFileToDataUrl(file)),
       );
       setSelectedRoomImageDataUrls((prev) => [...prev, ...encoded]);
-      toast.success(`${imageFiles.length} room image(s) attached and optimized.`);
+      toast.success(
+        `${imageFiles.length} room image(s) attached and optimized.`,
+      );
     } catch (error) {
       toast.error("Failed to process selected room image files.");
     }
@@ -404,6 +432,33 @@ export default function HostelsManager() {
   const filteredHostels = hostels.filter(
     (h) => selectedUniversity === "all" || h.university === selectedUniversity,
   );
+
+  const sortedHostels = [...filteredHostels].sort((left, right) => {
+    if (sortBy === "price-asc") {
+      return comparePrices(
+        parseHostelPrice(left.price_range),
+        parseHostelPrice(right.price_range),
+        true,
+      );
+    }
+
+    if (sortBy === "price-desc") {
+      return comparePrices(
+        parseHostelPrice(left.price_range),
+        parseHostelPrice(right.price_range),
+        false,
+      );
+    }
+
+    if (sortBy === "rating-desc") {
+      return (right.rating || 0) - (left.rating || 0);
+    }
+
+    return (
+      new Date(right.created_at || 0).getTime() -
+      new Date(left.created_at || 0).getTime()
+    );
+  });
 
   // ----------------------------------------------------------------------
   // Room Management Logic
@@ -555,6 +610,22 @@ export default function HostelsManager() {
                     {uni}
                   </option>
                 ))}
+              </select>
+            </div>
+
+            <div className="flex items-center gap-2">
+              <span className="text-sm font-semibold text-slate-500">
+                Sort By:
+              </span>
+              <select
+                value={sortBy}
+                onChange={(e) => setSortBy(e.target.value as SortOption)}
+                className="h-10 px-3 bg-white border border-slate-200 rounded-lg text-sm text-slate-700 shadow-sm focus:ring-2 focus:ring-primary focus:border-primary outline-none transition-all"
+              >
+                <option value="newest">Newest First</option>
+                <option value="price-asc">Price: Low to High</option>
+                <option value="price-desc">Price: High to Low</option>
+                <option value="rating-desc">Highest Rated</option>
               </select>
             </div>
 
@@ -752,7 +823,10 @@ export default function HostelsManager() {
                           required
                           value={newHostel.category}
                           onChange={(e) =>
-                            setNewHostel({ ...newHostel, category: e.target.value })
+                            setNewHostel({
+                              ...newHostel,
+                              category: e.target.value,
+                            })
                           }
                           className="w-full h-11 px-3 bg-white border border-slate-200 rounded-xl text-sm text-slate-700 shadow-sm focus:ring-2 focus:ring-primary focus:border-primary outline-none transition-all"
                         >
@@ -1191,7 +1265,7 @@ export default function HostelsManager() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {filteredHostels.map((hostel) => (
+                  {sortedHostels.map((hostel) => (
                     <TableRow
                       key={hostel.id}
                       className="hover:bg-slate-50/50 transition-colors border-b border-slate-100 last:border-0"
@@ -1319,62 +1393,118 @@ export default function HostelsManager() {
       {/* Property Creation Dialog was moved into Header component logic. */}
 
       {/* Manage Rooms Dialog */}
-      <Dialog open={isRoomDialogOpen} onOpenChange={(open) => {
-        setIsRoomDialogOpen(open);
-        if (!open) {
-          setIsRoomDragActive(false);
-          resetRoomForm();
-        }
-      }}>
+      <Dialog
+        open={isRoomDialogOpen}
+        onOpenChange={(open) => {
+          setIsRoomDialogOpen(open);
+          if (!open) {
+            setIsRoomDragActive(false);
+            resetRoomForm();
+          }
+        }}
+      >
         <DialogContent className="max-w-3xl max-h-[85vh] overflow-y-auto rounded-2xl border-0 shadow-2xl bg-white p-0">
           <DialogHeader className="border-b border-slate-100 p-6 bg-slate-50 relative">
-            <DialogTitle className="text-xl font-bold text-slate-900 tracking-tight">Room Inventory: {selectedHostel?.name}</DialogTitle>
-            <DialogDescription className="text-sm font-medium text-slate-500 mt-1">Manage physical units and pricing structure</DialogDescription>
+            <DialogTitle className="text-xl font-bold text-slate-900 tracking-tight">
+              Room Inventory: {selectedHostel?.name}
+            </DialogTitle>
+            <DialogDescription className="text-sm font-medium text-slate-500 mt-1">
+              Manage physical units and pricing structure
+            </DialogDescription>
           </DialogHeader>
 
           <div className="p-6 space-y-8">
             <div>
-              <h4 className="text-sm font-semibold text-slate-700 mb-4">Existing Inventory Types</h4>
+              <h4 className="text-sm font-semibold text-slate-700 mb-4">
+                Existing Inventory Types
+              </h4>
               {isLoadingRooms ? (
-                <div className="py-10 flex flex-col justify-center items-center"><Loader2 className="h-8 w-8 animate-spin text-primary mb-2" /><span className="text-sm text-slate-500">Loading units...</span></div>
+                <div className="py-10 flex flex-col justify-center items-center">
+                  <Loader2 className="h-8 w-8 animate-spin text-primary mb-2" />
+                  <span className="text-sm text-slate-500">
+                    Loading units...
+                  </span>
+                </div>
               ) : rooms.length === 0 ? (
-                <p className="text-sm text-slate-500 bg-slate-50 rounded-xl py-8 border border-dashed border-slate-200 text-center font-medium">No inventory data configured for this property.</p>
+                <p className="text-sm text-slate-500 bg-slate-50 rounded-xl py-8 border border-dashed border-slate-200 text-center font-medium">
+                  No inventory data configured for this property.
+                </p>
               ) : (
                 <div className="border border-slate-200 rounded-xl overflow-hidden shadow-sm">
                   <Table>
                     <TableHeader className="bg-slate-50 border-b border-slate-200">
                       <TableRow className="hover:bg-transparent">
-                        <TableHead className="text-xs font-semibold text-slate-600 h-10">Preview</TableHead>
-                        <TableHead className="text-xs font-semibold text-slate-600 h-10">Unit Type</TableHead>
-                        <TableHead className="text-xs font-semibold text-slate-600 h-10">Unit Price</TableHead>
-                        <TableHead className="text-xs font-semibold text-slate-600 h-10">Capacity</TableHead>
+                        <TableHead className="text-xs font-semibold text-slate-600 h-10">
+                          Preview
+                        </TableHead>
+                        <TableHead className="text-xs font-semibold text-slate-600 h-10">
+                          Unit Type
+                        </TableHead>
+                        <TableHead className="text-xs font-semibold text-slate-600 h-10">
+                          Unit Price
+                        </TableHead>
+                        <TableHead className="text-xs font-semibold text-slate-600 h-10">
+                          Capacity
+                        </TableHead>
                         <TableHead className="h-10"></TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
                       {rooms.map((room) => (
-                        <TableRow key={room.id} className="hover:bg-slate-50 transition-colors border-b border-slate-100 last:border-0">
+                        <TableRow
+                          key={room.id}
+                          className="hover:bg-slate-50 transition-colors border-b border-slate-100 last:border-0"
+                        >
                           <TableCell className="w-16">
                             <div className="h-10 w-10 rounded-lg overflow-hidden bg-slate-100 border border-slate-200">
                               {room.images?.[0] ? (
-                                <img src={room.images[0]} alt={room.name} loading="lazy" decoding="async" className="h-full w-full object-cover" />
+                                <img
+                                  src={room.images[0]}
+                                  alt={room.name}
+                                  loading="lazy"
+                                  decoding="async"
+                                  className="h-full w-full object-cover"
+                                />
                               ) : (
-                                <div className="h-full w-full flex items-center justify-center text-[9px] text-slate-500 font-semibold">No img</div>
+                                <div className="h-full w-full flex items-center justify-center text-[9px] text-slate-500 font-semibold">
+                                  No img
+                                </div>
                               )}
                             </div>
                           </TableCell>
-                          <TableCell className="text-sm font-bold text-slate-800">{room.name}</TableCell>
-                          <TableCell className="text-sm font-medium text-slate-600">{formatUGX(room.price)}</TableCell>
-                          <TableCell className="text-sm font-medium text-slate-600">{room.capacity || 1} Beds</TableCell>
+                          <TableCell className="text-sm font-bold text-slate-800">
+                            {room.name}
+                          </TableCell>
+                          <TableCell className="text-sm font-medium text-slate-600">
+                            {formatUGX(room.price)}
+                          </TableCell>
+                          <TableCell className="text-sm font-medium text-slate-600">
+                            {room.capacity || 1} Beds
+                          </TableCell>
                           <TableCell className="text-right">
-                            <Button type="button" onClick={() => {
-                              setEditingRoomId(room.id);
-                              setNewRoom({ name: room.name || "", price: room.price?.toString() || "", capacity: room.capacity?.toString() || "", description: room.description || "", images: (room.images || []).join(", ") });
-                              setSelectedRoomImageDataUrls([]);
-                            }} variant="ghost" className="text-slate-400 hover:text-primary hover:bg-primary/10 p-0 h-8 w-8 rounded-lg mr-1">
+                            <Button
+                              type="button"
+                              onClick={() => {
+                                setEditingRoomId(room.id);
+                                setNewRoom({
+                                  name: room.name || "",
+                                  price: room.price?.toString() || "",
+                                  capacity: room.capacity?.toString() || "",
+                                  description: room.description || "",
+                                  images: (room.images || []).join(", "),
+                                });
+                                setSelectedRoomImageDataUrls([]);
+                              }}
+                              variant="ghost"
+                              className="text-slate-400 hover:text-primary hover:bg-primary/10 p-0 h-8 w-8 rounded-lg mr-1"
+                            >
                               <Edit className="h-4 w-4" />
                             </Button>
-                            <Button onClick={() => handleDeleteRoom(room.id)} variant="ghost" className="text-slate-400 hover:text-rose-600 hover:bg-rose-50 p-0 h-8 w-8 rounded-lg">
+                            <Button
+                              onClick={() => handleDeleteRoom(room.id)}
+                              variant="ghost"
+                              className="text-slate-400 hover:text-rose-600 hover:bg-rose-50 p-0 h-8 w-8 rounded-lg"
+                            >
                               <Trash2 className="h-4 w-4" />
                             </Button>
                           </TableCell>
@@ -1387,51 +1517,169 @@ export default function HostelsManager() {
             </div>
 
             <div className="border border-slate-200 bg-slate-50 rounded-2xl p-6 shadow-sm">
-              <h4 className="text-sm font-bold text-slate-900 mb-4">Add New Inventory Unit</h4>
+              <h4 className="text-sm font-bold text-slate-900 mb-4">
+                Add New Inventory Unit
+              </h4>
               <form onSubmit={handleSaveRoom} className="space-y-4">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-4">
                   <div className="space-y-1.5">
-                    <Label className="text-xs font-semibold text-slate-700">Unit Label</Label>
-                    <Input required value={newRoom.name} onChange={(e) => setNewRoom({ ...newRoom, name: e.target.value })} placeholder="e.g. Single Self" className="bg-white rounded-lg border-slate-200 text-sm h-11 shadow-sm focus:ring-primary focus:border-primary" />
+                    <Label className="text-xs font-semibold text-slate-700">
+                      Unit Label
+                    </Label>
+                    <Input
+                      required
+                      value={newRoom.name}
+                      onChange={(e) =>
+                        setNewRoom({ ...newRoom, name: e.target.value })
+                      }
+                      placeholder="e.g. Single Self"
+                      className="bg-white rounded-lg border-slate-200 text-sm h-11 shadow-sm focus:ring-primary focus:border-primary"
+                    />
                   </div>
                   <div className="space-y-1.5">
-                    <Label className="text-xs font-semibold text-slate-700">Price (UGX)</Label>
-                    <Input required type="number" min="0" value={newRoom.price} onChange={(e) => setNewRoom({ ...newRoom, price: e.target.value })} placeholder="1,500,000" className="bg-white rounded-lg border-slate-200 text-sm h-11 shadow-sm focus:ring-primary focus:border-primary" />
+                    <Label className="text-xs font-semibold text-slate-700">
+                      Price (UGX)
+                    </Label>
+                    <Input
+                      required
+                      type="number"
+                      min="0"
+                      value={newRoom.price}
+                      onChange={(e) =>
+                        setNewRoom({ ...newRoom, price: e.target.value })
+                      }
+                      placeholder="1,500,000"
+                      className="bg-white rounded-lg border-slate-200 text-sm h-11 shadow-sm focus:ring-primary focus:border-primary"
+                    />
                   </div>
                   <div className="space-y-1.5">
-                    <Label className="text-xs font-semibold text-slate-700">Bed Count / Capacity</Label>
-                    <Input required type="number" min="1" value={newRoom.capacity} onChange={(e) => setNewRoom({ ...newRoom, capacity: e.target.value })} placeholder="1" className="bg-white rounded-lg border-slate-200 text-sm h-11 shadow-sm focus:ring-primary focus:border-primary" />
+                    <Label className="text-xs font-semibold text-slate-700">
+                      Bed Count / Capacity
+                    </Label>
+                    <Input
+                      required
+                      type="number"
+                      min="1"
+                      value={newRoom.capacity}
+                      onChange={(e) =>
+                        setNewRoom({ ...newRoom, capacity: e.target.value })
+                      }
+                      placeholder="1"
+                      className="bg-white rounded-lg border-slate-200 text-sm h-11 shadow-sm focus:ring-primary focus:border-primary"
+                    />
                   </div>
                   <div className="space-y-1.5">
-                    <Label className="text-xs font-semibold text-slate-700 flex items-center gap-1.5"><ImageIcon className="h-3.5 w-3.5 text-primary" /> Room Images</Label>
-                    <Input value={newRoom.images} onChange={(e) => setNewRoom({ ...newRoom, images: e.target.value })} placeholder="Paste image URLs or upload files below" className="bg-white rounded-lg border-slate-200 text-sm h-11 shadow-sm focus:ring-primary focus:border-primary" />
-                    <input ref={roomFileInputRef} type="file" accept="image/*" multiple className="hidden" onChange={(e) => handleIncomingRoomFiles(e.target.files)} />
-                    <div onDragOver={(e) => { e.preventDefault(); setIsRoomDragActive(true); }} onDragLeave={() => setIsRoomDragActive(false)} onDrop={(e) => { e.preventDefault(); setIsRoomDragActive(false); handleIncomingRoomFiles(e.dataTransfer.files); }} className={cn("rounded-xl border border-dashed p-3 text-center transition-colors", isRoomDragActive ? "border-primary bg-primary/5" : "border-slate-300 bg-white")}>
-                      <p className="text-xs text-slate-600 mb-2">Drag and drop room images here</p>
-                      <Button type="button" variant="outline" className="h-8 text-xs" onClick={() => roomFileInputRef.current?.click()}>Choose From Files</Button>
+                    <Label className="text-xs font-semibold text-slate-700 flex items-center gap-1.5">
+                      <ImageIcon className="h-3.5 w-3.5 text-primary" /> Room
+                      Images
+                    </Label>
+                    <Input
+                      value={newRoom.images}
+                      onChange={(e) =>
+                        setNewRoom({ ...newRoom, images: e.target.value })
+                      }
+                      placeholder="Paste image URLs or upload files below"
+                      className="bg-white rounded-lg border-slate-200 text-sm h-11 shadow-sm focus:ring-primary focus:border-primary"
+                    />
+                    <input
+                      ref={roomFileInputRef}
+                      type="file"
+                      accept="image/*"
+                      multiple
+                      className="hidden"
+                      onChange={(e) => handleIncomingRoomFiles(e.target.files)}
+                    />
+                    <div
+                      onDragOver={(e) => {
+                        e.preventDefault();
+                        setIsRoomDragActive(true);
+                      }}
+                      onDragLeave={() => setIsRoomDragActive(false)}
+                      onDrop={(e) => {
+                        e.preventDefault();
+                        setIsRoomDragActive(false);
+                        handleIncomingRoomFiles(e.dataTransfer.files);
+                      }}
+                      className={cn(
+                        "rounded-xl border border-dashed p-3 text-center transition-colors",
+                        isRoomDragActive
+                          ? "border-primary bg-primary/5"
+                          : "border-slate-300 bg-white",
+                      )}
+                    >
+                      <p className="text-xs text-slate-600 mb-2">
+                        Drag and drop room images here
+                      </p>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        className="h-8 text-xs"
+                        onClick={() => roomFileInputRef.current?.click()}
+                      >
+                        Choose From Files
+                      </Button>
                     </div>
                     {selectedRoomImageDataUrls.length > 0 && (
                       <div className="grid grid-cols-4 gap-2 mt-2">
                         {selectedRoomImageDataUrls.map((img, idx) => (
-                          <div key={`${idx}-${img.slice(0, 20)}`} className="relative rounded-md overflow-hidden border border-slate-200">
-                            <img src={img} alt={`room-upload-${idx + 1}`} loading="lazy" decoding="async" className="h-14 w-full object-cover" />
-                            <button type="button" className="absolute top-0.5 right-0.5 h-5 w-5 rounded-full bg-black/60 text-white text-[10px]" onClick={() => setSelectedRoomImageDataUrls((prev) => prev.filter((_, i) => i !== idx))}>x</button>
+                          <div
+                            key={`${idx}-${img.slice(0, 20)}`}
+                            className="relative rounded-md overflow-hidden border border-slate-200"
+                          >
+                            <img
+                              src={img}
+                              alt={`room-upload-${idx + 1}`}
+                              loading="lazy"
+                              decoding="async"
+                              className="h-14 w-full object-cover"
+                            />
+                            <button
+                              type="button"
+                              className="absolute top-0.5 right-0.5 h-5 w-5 rounded-full bg-black/60 text-white text-[10px]"
+                              onClick={() =>
+                                setSelectedRoomImageDataUrls((prev) =>
+                                  prev.filter((_, i) => i !== idx),
+                                )
+                              }
+                            >
+                              x
+                            </button>
                           </div>
                         ))}
                       </div>
                     )}
                   </div>
                   <div className="space-y-1.5 md:col-span-2">
-                    <Label className="text-xs font-semibold text-slate-700">Unit Description</Label>
-                    <Textarea value={newRoom.description} onChange={(e) => setNewRoom({ ...newRoom, description: e.target.value })} placeholder="Describe specific unit features..." className="bg-white rounded-lg border-slate-200 text-sm resize-none h-24 shadow-sm focus:ring-primary focus:border-primary" />
+                    <Label className="text-xs font-semibold text-slate-700">
+                      Unit Description
+                    </Label>
+                    <Textarea
+                      value={newRoom.description}
+                      onChange={(e) =>
+                        setNewRoom({ ...newRoom, description: e.target.value })
+                      }
+                      placeholder="Describe specific unit features..."
+                      className="bg-white rounded-lg border-slate-200 text-sm resize-none h-24 shadow-sm focus:ring-primary focus:border-primary"
+                    />
                   </div>
                 </div>
                 <div className="flex justify-end pt-4 border-t border-slate-200 mt-4 gap-3">
                   {editingRoomId && (
-                    <Button type="button" variant="ghost" onClick={() => resetRoomForm()} className="text-slate-600 text-sm font-bold rounded-xl h-11 px-6 hover:bg-slate-100">Cancel Action</Button>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      onClick={() => resetRoomForm()}
+                      className="text-slate-600 text-sm font-bold rounded-xl h-11 px-6 hover:bg-slate-100"
+                    >
+                      Cancel Action
+                    </Button>
                   )}
-                  <Button type="submit" className="bg-primary hover:bg-primary/90 text-white text-sm font-bold rounded-xl h-11 px-6 shadow-sm gap-2 transition-transform hover:scale-[1.02]">
-                    <Plus className="h-4 w-4" /> {editingRoomId ? "Update Inventory Unit" : "Add Unit"}
+                  <Button
+                    type="submit"
+                    className="bg-primary hover:bg-primary/90 text-white text-sm font-bold rounded-xl h-11 px-6 shadow-sm gap-2 transition-transform hover:scale-[1.02]"
+                  >
+                    <Plus className="h-4 w-4" />{" "}
+                    {editingRoomId ? "Update Inventory Unit" : "Add Unit"}
                   </Button>
                 </div>
               </form>

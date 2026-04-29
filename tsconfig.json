@@ -40,6 +40,10 @@
         "./packages/shared/src/lib/supabase",
         "./src/lib/supabase"
       ],
+      "@/lib/routes": [
+        "./packages/shared/src/lib/routes",
+        "./src/lib/routes"
+      ],
       "@/components/layout/*": [
         "./packages/shared/src/components/layout/*",
         "./src/components/layout/*"

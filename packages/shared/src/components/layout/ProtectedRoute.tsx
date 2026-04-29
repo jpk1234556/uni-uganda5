@@ -2,6 +2,7 @@ import { Navigate } from "react-router-dom";
 import { useAuth } from "@/context/AuthContext";
 import type { UserRole } from "@/types";
 import { getPortalUrlForRole } from "../../lib/portalRouting";
+import { appRoutes } from "../../lib/routes";
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
@@ -30,11 +31,11 @@ export default function ProtectedRoute({
   }
 
   if (!user) {
-    return <Navigate to="/auth" replace />;
+    return <Navigate to={appRoutes.auth} replace />;
   }
 
   if (allowedRoles && !dbUser) {
-    return <Navigate to="/auth" replace />;
+    return <Navigate to={appRoutes.auth} replace />;
   }
 
   if (allowedRoles && dbUser && !allowedRoles.includes(dbUser.role)) {
@@ -81,7 +82,7 @@ export default function ProtectedRoute({
               Go to my portal
             </button>
             <button
-              onClick={() => window.location.assign("/auth")}
+              onClick={() => window.location.assign(appRoutes.auth)}
               className="w-full h-11 bg-slate-50 hover:bg-slate-100 text-slate-700 border border-slate-200 rounded-xl font-bold text-sm transition-all active:scale-[0.98]"
             >
               Switch Accounts
