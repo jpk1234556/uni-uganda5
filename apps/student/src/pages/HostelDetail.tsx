@@ -42,11 +42,13 @@ import { useAuth } from "@/context/AuthContext";
 import { supabase } from "@/lib/supabase";
 
 interface HostelWithOwner extends Hostel {
-  users?: {
-    first_name: string;
-    last_name: string;
-    email: string;
-  } | undefined;
+  users?:
+    | {
+        first_name: string;
+        last_name: string;
+        email: string;
+      }
+    | undefined;
 }
 
 interface ReviewWithUser {
@@ -681,7 +683,9 @@ export default function HostelDetail() {
                               onClick={() => handleBookClick(room)}
                               disabled={Number(room.available) <= 0}
                               variant={
-                                Number(room.available) > 0 ? "default" : "secondary"
+                                Number(room.available) > 0
+                                  ? "default"
+                                  : "secondary"
                               }
                               className={cn(
                                 "w-full md:w-32 font-semibold shadow-sm cursor-pointer",
@@ -690,7 +694,9 @@ export default function HostelDetail() {
                                   : "bg-slate-200 text-slate-500 cursor-not-allowed",
                               )}
                             >
-                              {Number(room.available) > 0 ? "Select Room" : "Full"}
+                              {Number(room.available) > 0
+                                ? "Select Room"
+                                : "Full"}
                             </Button>
                           </div>
                         </div>

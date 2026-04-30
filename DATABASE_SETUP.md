@@ -18,31 +18,37 @@ Complete this checklist to properly configure your Supabase database for product
 Run these SQL files **in order** in the Supabase SQL Editor:
 
 ### Phase 1 - Foundation
+
 - [ ] `complete_migration.sql` - Main migration with user suspension & payments
 
-### Phase 2 - Feature Additions  
+### Phase 2 - Feature Additions
+
 - [ ] `phase2_superadmin_migration.sql` - Super admin enhancements
 - [ ] `phase3_ratings_migration.sql` - Rating and review counts
 - [ ] `phase4_admin_updates.sql` - Admin control features
 - [ ] `phase4_bookings_migration.sql` - Detailed booking fields
 
 ### Phase 3 - User Management
+
 - [ ] `phase5_student_inserts.sql` - Sample student data (optional)
 - [ ] `phase6_auth_trigger.sql` - Authentication triggers (CRITICAL)
 - [ ] `phase7_cleanup.sql` - Database cleanup
 - [ ] `phase8_make_admin.sql` - Admin role setup
 
 ### Phase 4 - Reviews & Permissions
+
 - [ ] `phase9_reviews.sql` - Review system
 - [ ] `phase10_admin_monopoly.sql` - Admin-only listing/booking control (CRITICAL)
 - [ ] `phase11_rich_rooms.sql` - Enhanced room types
 - [ ] `phase12_auth_fixes.sql` - Authentication fixes
 
 ### Phase 5 - Realtime Features
+
 - [ ] `phase13_realtime.sql` - Enable realtime subscriptions
 - [ ] `phase14_final_features.sql` - Final features and notifications
 
 ### Phase 6 - Marketplace Checkout Core
+
 - [ ] `phase25_marketplace_checkout_core.sql` - Cart, checkout intents, inventory holds, and transactional booking finalize functions
 
 ---
@@ -60,8 +66,8 @@ Run these SQL files **in order** in the Supabase SQL Editor:
 SELECT id, email FROM auth.users WHERE email = 'admin@uninest.ug';
 
 -- 3. Update the public.users table with super_admin role
-UPDATE public.users 
-SET role = 'super_admin', 
+UPDATE public.users
+SET role = 'super_admin',
     is_active = true,
     first_name = 'Super',
     last_name = 'Admin'
@@ -86,8 +92,8 @@ Check that Row Level Security (RLS) is enabled:
 
 ```sql
 -- Verify RLS is enabled on all tables
-SELECT tablename, rowsecurity 
-FROM pg_tables 
+SELECT tablename, rowsecurity
+FROM pg_tables
 WHERE schemaname = 'public'
 ORDER BY tablename;
 ```
@@ -108,6 +114,7 @@ SELECT * FROM pg_policies WHERE tablename = 'bookings';
 ```
 
 Expected policies:
+
 - ✅ Users can read own data
 - ✅ Super admins can read/write all
 - ✅ Students can create bookings
@@ -124,12 +131,13 @@ Ensure realtime is enabled for live updates:
 SELECT * FROM pg_publication WHERE pubname = 'supabase_realtime';
 
 -- Check which tables have realtime enabled
-SELECT schemaname, tablename 
-FROM pg_publication_tables 
+SELECT schemaname, tablename
+FROM pg_publication_tables
 WHERE pubname = 'supabase_realtime';
 ```
 
 Should include:
+
 - `hostels`
 - `room_types`
 - `bookings`
@@ -139,6 +147,7 @@ Should include:
 - `notifications` (if exists)
 
 If any are missing, run:
+
 ```sql
 ALTER PUBLICATION supabase_realtime ADD TABLE hostels;
 ALTER PUBLICATION supabase_realtime ADD TABLE room_types;
@@ -232,15 +241,19 @@ After completing setup, verify:
 ## 🚨 Common Issues
 
 ### "relation does not exist" error
+
 **Solution**: You missed a migration. Run all SQL files in order.
 
 ### "permission denied" error
+
 **Solution**: Check RLS policies. Ensure you're logged in as the correct role.
 
 ### Auth trigger not working
+
 **Solution**: Re-run `phase6_auth_trigger.sql` and verify it's in `pg_proc`.
 
 ### Realtime not updating
+
 **Solution**: Verify publication exists and tables are added to it.
 
 ---
@@ -248,6 +261,7 @@ After completing setup, verify:
 ## 📞 Next Steps
 
 After database setup:
+
 1. ✅ Copy `.env.example` to `.env.local` and add credentials
 2. ✅ Run `npm install`
 3. ✅ Test locally with `npm run dev:student`

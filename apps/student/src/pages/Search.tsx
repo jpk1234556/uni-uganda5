@@ -30,10 +30,10 @@ import { Loader2 } from "lucide-react";
 import { toast } from "sonner";
 
 const AMENITIES = [
-  { id: "wifi", label: "Free Wi-Fi", icon: Wifi },
-  { id: "security", label: "24/7 Security", icon: Shield },
-  { id: "power", label: "Backup Generator", icon: Zap },
-  { id: "parking", label: "Parking Space", icon: Car },
+  { id: "wifi", label: "Free Wi-Fi", keywords: ["wifi", "wi-fi", "internet", "network"], icon: Wifi },
+  { id: "security", label: "24/7 Security", keywords: ["security", "guard", "cctv", "safe"], icon: Shield },
+  { id: "power", label: "Backup Generator", keywords: ["power", "generator", "backup", "electricity"], icon: Zap },
+  { id: "parking", label: "Parking Space", keywords: ["parking", "garage", "car"], icon: Car },
 ];
 
 interface HostelWithRooms extends Hostel {
@@ -98,11 +98,15 @@ const matchesAmenities = (
     return false;
   }
 
-  return selectedAmenities.every((selectedAmenity) =>
-    hAmenities.some((hostelAmenity) =>
-      hostelAmenity.includes(selectedAmenity.toLowerCase()),
-    ),
-  );
+  return selectedAmenities.every((selectedId) => {
+    const amenityDef = AMENITIES.find(a => a.id === selectedId);
+    if (!amenityDef) return false;
+
+    // Check if any of the hostel's amenities contain any of our keywords
+    return hAmenities.some(ha => 
+      amenityDef.keywords.some(kw => ha.includes(kw))
+    );
+  });
 };
 
 export default function Search() {
@@ -437,17 +441,17 @@ export default function Search() {
                     >
                       <Checkbox
                         id={amenity.id}
-                        checked={selectedAmenities.includes(amenity.label)}
+                        checked={selectedAmenities.includes(amenity.id)}
                         onCheckedChange={(checked) => {
                           if (checked) {
                             setSelectedAmenities([
                               ...selectedAmenities,
-                              amenity.label,
+                              amenity.id,
                             ]);
                           } else {
                             setSelectedAmenities(
                               selectedAmenities.filter(
-                                (a) => a !== amenity.label,
+                                (a) => a !== amenity.id,
                               ),
                             );
                           }
