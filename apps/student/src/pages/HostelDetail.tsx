@@ -679,18 +679,18 @@ export default function HostelDetail() {
                             </div>
                             <Button
                               onClick={() => handleBookClick(room)}
-                              disabled={!room.available || room.available <= 0}
+                              disabled={Number(room.available) <= 0}
                               variant={
-                                room.available > 0 ? "default" : "secondary"
+                                Number(room.available) > 0 ? "default" : "secondary"
                               }
                               className={cn(
                                 "w-full md:w-32 font-semibold shadow-sm cursor-pointer",
-                                room.available > 0
+                                Number(room.available) > 0
                                   ? "bg-primary hover:bg-primary/90 text-white"
                                   : "bg-slate-200 text-slate-500 cursor-not-allowed",
                               )}
                             >
-                              {room.available > 0 ? "Select Room" : "Full"}
+                              {Number(room.available) > 0 ? "Select Room" : "Full"}
                             </Button>
                           </div>
                         </div>

@@ -5,6 +5,7 @@ import { AuthProvider } from "@/context/AuthContext";
 import Navbar from "@/components/layout/Navbar";
 import Footer from "@/components/layout/Footer";
 import studentBackground from "../../../images/e0901fce5aa5c561965db8d07c519a71.jpg";
+import { Toaster } from "sonner";
 
 const Home = lazy(() => import("./pages/Home"));
 const Search = lazy(() => import("./pages/Search"));
@@ -55,6 +56,7 @@ export default function App() {
             </Suspense>
           </main>
           <Footer />
+          <Toaster position="top-center" richColors />
         </div>
       </AuthProvider>
     </BrowserRouter>
