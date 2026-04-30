@@ -287,7 +287,13 @@ export default function StudentDashboard() {
         .limit(200);
 
       if (error) throw error;
-      setMessages((data || []) as Message[]);
+      const normalized = (data || []).map((m: any) => ({
+        ...m,
+        sender: Array.isArray(m.sender) ? m.sender[0] : m.sender,
+        receiver: Array.isArray(m.receiver) ? m.receiver[0] : m.receiver,
+      }));
+
+      setMessages(normalized as Message[]);
     } catch (error) {
       console.error("Error fetching messages:", error);
     } finally {
@@ -373,7 +379,7 @@ export default function StudentDashboard() {
     const messagesSub = supabase
       .channel("public:messages")
       .on(
-        "postgres_changes",
+        "postgres_changes" as any,
         { event: "*", schema: "public", table: "messages" },
         () => {
           fetchMessages();

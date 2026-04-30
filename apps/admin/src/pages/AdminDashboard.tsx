@@ -87,7 +87,13 @@ export default function AdminDashboard() {
         .order("created_at", { ascending: false });
 
       if (error) throw error;
-      setHostels((data as HostelWithOwner[]) || []);
+      const normalized = (data || []).map((d: any) => ({
+        ...d,
+        users: Array.isArray(d.users) ? d.users[0] : d.users,
+        room_types: d.room_types || [],
+      }));
+
+      setHostels(normalized as HostelWithOwner[]);
     } catch (error) {
       console.error("Error fetching hostels:", error);
       toast.error("Failed to load hostels");
@@ -115,7 +121,14 @@ export default function AdminDashboard() {
         .limit(50);
 
       if (error) throw error;
-      setBookings((data as BookingWithRelations[]) || []);
+      const normalized = (data || []).map((b: any) => ({
+        ...b,
+        users: Array.isArray(b.users) ? b.users[0] : b.users,
+        hostels: Array.isArray(b.hostels) ? b.hostels[0] : b.hostels,
+        room_types: Array.isArray(b.room_types) ? b.room_types[0] : b.room_types,
+      }));
+
+      setBookings(normalized as BookingWithRelations[]);
     } catch (error) {
       console.error("Error fetching bookings:", error);
       toast.error("Failed to load bookings");

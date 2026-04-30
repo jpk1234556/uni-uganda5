@@ -167,7 +167,12 @@ export default function HostelDetail() {
 
       if (reviewsError) throw reviewsError;
 
-      setReviews((reviewsData as ReviewWithUser[]) || []);
+      const normalizedReviews = (reviewsData || []).map((r: any) => ({
+        ...r,
+        users: Array.isArray(r.users) ? r.users[0] : r.users,
+      }));
+
+      setReviews(normalizedReviews as ReviewWithUser[]);
     } catch (error) {
       toast.error("Failed to load hostel details");
       console.error(error);
@@ -184,7 +189,7 @@ export default function HostelDetail() {
       const roomsSubscription = supabase
         .channel(`public:room_types:hostel_id=eq.${id}`)
         .on(
-          "postgres_changes",
+          "postgres_changes" as any,
           {
             event: "*",
             schema: "public",
@@ -219,7 +224,7 @@ export default function HostelDetail() {
       const reviewsSubscription = supabase
         .channel(`public:reviews:hostel_id=eq.${id}`)
         .on(
-          "postgres_changes",
+          "postgres_changes" as any,
           {
             event: "*",
             schema: "public",
