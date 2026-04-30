@@ -828,6 +828,16 @@ export default function HostelDetail() {
         </div>
       </div>
 
+      {/* Booking Dialog State Debugger */}
+      {isBookingOpen && (
+        <div className="fixed inset-0 z-[99999] bg-red-500/50 flex items-center justify-center pointer-events-none">
+          <div className="bg-white p-6 rounded-xl shadow-2xl text-center border-4 border-red-500">
+            <h1 className="text-red-600 text-3xl font-black mb-2">DIALOG STATE IS ACTIVE</h1>
+            <p className="text-slate-800 font-bold">If you see this but no booking form, the Radix Dialog component is completely failing to render.</p>
+          </div>
+        </div>
+      )}
+
       {/* Booking Dialog */}
       <Dialog open={isBookingOpen} onOpenChange={setIsBookingOpen}>
         <DialogContent className="sm:max-w-[640px] max-h-[90vh] overflow-y-auto">
