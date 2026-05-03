@@ -1367,12 +1367,11 @@ export default function OwnerDashboard() {
                               <TableCell className="text-right pr-8">
                                 <Button
                                   type="button"
-                                  variant="outline"
-                                  size="sm"
-                                  className="rounded-lg shadow-sm border-slate-200 text-sm font-semibold hover:bg-primary hover:text-white transition-colors text-slate-700"
+                                  className="bg-primary hover:bg-primary/90 text-white rounded-lg shadow-md text-sm font-bold px-4 py-2 transition-all hover:scale-105"
                                   onClick={() => openManageRooms(property)}
                                 >
-                                  Manage Rooms
+                                  <LayoutDashboard className="h-4 w-4 mr-2" />
+                                  Rooms
                                 </Button>
                               </TableCell>
                             </TableRow>
@@ -1557,7 +1556,7 @@ export default function OwnerDashboard() {
           }
         }}
       >
-        <DialogContent className="max-w-2xl max-h-[85vh] overflow-hidden p-0 rounded-2xl border-0 shadow-2xl bg-white">
+        <DialogContent className="max-w-3xl max-h-[90vh] overflow-hidden p-0 rounded-2xl border-0 shadow-2xl bg-white fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-50 w-[90vw]">
           <div className="bg-slate-50 border-b border-slate-100 text-slate-900 p-6 relative">
             <DialogHeader>
               <DialogTitle className="text-2xl font-bold tracking-tight">
@@ -1584,9 +1583,13 @@ export default function OwnerDashboard() {
                     </span>
                   </div>
                 ) : rooms.length === 0 ? (
-                  <div className="p-8 border border-dashed border-slate-200 rounded-xl bg-slate-50 text-center">
-                    <p className="text-sm font-semibold text-slate-500">
-                      No Room Data Available
+                  <div className="p-12 border border-dashed border-slate-300 rounded-xl bg-gradient-to-b from-slate-50 to-slate-100 text-center">
+                    <LayoutDashboard className="h-10 w-10 text-slate-300 mx-auto mb-3" />
+                    <p className="text-sm font-semibold text-slate-600 mb-1">
+                      No Rooms Yet
+                    </p>
+                    <p className="text-xs text-slate-500">
+                      Add your first room type below to get started.
                     </p>
                   </div>
                 ) : (
