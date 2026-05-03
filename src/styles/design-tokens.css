@@ -1,0 +1,47 @@
+/* Design tokens and small utility mappings for Uni-Nest visual system */
+:root {
+  /* Radii */
+  --radius-sm: 6px;
+  --radius-md: 12px;
+  --radius-lg: 20px;
+
+  /* Elevation (soft shadows) */
+  --elevation-1: 0 6px 18px rgba(2,6,23,0.06);
+  --elevation-2: 0 12px 30px rgba(2,6,23,0.08);
+
+  /* Motion durations */
+  --motion-fast: 150ms;
+  --motion-medium: 280ms;
+
+  /* Semantic colors (fallbacks; Tailwind tokens still apply) */
+  --color-primary: #f97316;
+  --color-primary-foreground: #ffffff;
+  --color-card: var(--color-background);
+  --color-card-foreground: var(--color-foreground);
+  --color-border: rgba(15,23,42,0.06);
+}
+
+/* Small helper utilities used by primitives. These are intentionally minimal */
+.radius-sm { border-radius: var(--radius-sm); }
+.radius-md { border-radius: var(--radius-md); }
+.radius-lg { border-radius: var(--radius-lg); }
+
+.shadow-e1 { box-shadow: var(--elevation-1); }
+.shadow-e2 { box-shadow: var(--elevation-2); }
+
+.btn-primary {
+  background-color: var(--color-primary);
+  color: var(--color-primary-foreground);
+}
+
+.input-token {
+  border-color: var(--color-border);
+  border-radius: var(--radius-md);
+}
+
+.card-token {
+  background-color: var(--color-card);
+  color: var(--color-card-foreground);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--elevation-1);
+}

@@ -121,6 +121,8 @@
   }
 }
 
+@import './styles/design-tokens.css';
+
 @layer utilities {
   .glass {
     background-color: rgba(15, 23, 42, 0.7);
