@@ -10,8 +10,9 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Menu, LogOut, LayoutDashboard } from "lucide-react";
+import { Menu, LogOut, LayoutDashboard, Search, Sparkles, Users } from "lucide-react";
 import BrandMark from "@/components/layout/BrandMark";
+import { appRoutes } from "@/lib/routes";
 
 export default function Navbar() {
   const { user, dbUser, signOut } = useAuth();
@@ -47,6 +48,21 @@ export default function Navbar() {
         </div>
 
         <div className="flex items-center gap-3 md:gap-4">
+          <div className="hidden lg:flex items-center gap-2">
+            <Link to={appRoutes.search}>
+              <Button variant="outline" className="gap-2">
+                <Search className="h-4 w-4" />
+                Search hostels
+              </Button>
+            </Link>
+            <Link to={appRoutes.roommates}>
+              <Button variant="ghost" className="gap-2">
+                <Users className="h-4 w-4" />
+                Roommates
+              </Button>
+            </Link>
+          </div>
+
           {user ? (
             <DropdownMenu>
               <DropdownMenuTrigger className="relative h-10 w-10 rounded-full ring-2 ring-transparent transition hover:ring-primary/20">
@@ -95,21 +111,33 @@ export default function Navbar() {
 
       {isMobileMenuOpen && (
         <div className="md:hidden border-t border-border/70 bg-background/95 px-4 py-4 backdrop-blur">
-          <div className="flex flex-col gap-2 text-sm font-medium text-foreground">
+          <div className="flex flex-col gap-3 text-sm font-medium text-foreground">
             <Link
               to="/search"
-              className="rounded-lg px-3 py-2 transition-colors hover:bg-muted"
+              className="flex items-center gap-3 rounded-xl px-3 py-3 transition-colors hover:bg-muted"
               onClick={() => setIsMobileMenuOpen(false)}
             >
+              <Search className="h-4 w-4 text-muted-foreground" />
               Search
             </Link>
             <Link
               to="/roommates"
-              className="rounded-lg px-3 py-2 transition-colors hover:bg-muted"
+              className="flex items-center gap-3 rounded-xl px-3 py-3 transition-colors hover:bg-muted"
               onClick={() => setIsMobileMenuOpen(false)}
             >
+              <Users className="h-4 w-4 text-muted-foreground" />
               Roommates
             </Link>
+            {user && (
+              <Link
+                to={dashboardPath}
+                className="flex items-center gap-3 rounded-xl px-3 py-3 transition-colors hover:bg-muted"
+                onClick={() => setIsMobileMenuOpen(false)}
+              >
+                <LayoutDashboard className="h-4 w-4 text-muted-foreground" />
+                Dashboard
+              </Link>
+            )}
             {!user && (
               <div className="flex gap-2 pt-2">
                 <Link
@@ -130,6 +158,10 @@ export default function Navbar() {
                 </Link>
               </div>
             )}
+            <div className="rounded-2xl border border-border/70 bg-muted/40 p-4 text-xs leading-5 text-muted-foreground">
+              <Sparkles className="mb-2 h-4 w-4 text-primary" />
+              Start with search, then save hostels and move into booking from your dashboard.
+            </div>
           </div>
         </div>
       )}

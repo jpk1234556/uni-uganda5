@@ -1,16 +1,44 @@
 import { Link } from "react-router-dom";
+import { Button } from "@/components/ui/button";
 import BrandMark from "@/components/layout/BrandMark";
+import { appRoutes } from "@/lib/routes";
 
 export default function Footer() {
   return (
     <footer className="border-t border-border/70 bg-slate-950 text-slate-300">
       <div className="container mx-auto px-4 py-12">
+        <div className="mb-10 rounded-3xl border border-white/10 bg-white/5 px-6 py-6 backdrop-blur">
+          <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+            <div className="max-w-2xl">
+              <BrandMark className="mb-4 text-white" compact />
+              <h2 className="text-2xl font-semibold tracking-tight text-white md:text-3xl">
+                Ready to find the next place you’ll actually like living in?
+              </h2>
+              <p className="mt-2 max-w-xl text-sm leading-6 text-slate-400">
+                Search verified hostels, compare options quickly, and keep your shortlist organized in one place.
+              </p>
+            </div>
+
+            <div className="flex flex-col gap-3 sm:flex-row">
+              <Link to={appRoutes.search}>
+                <Button className="w-full bg-white text-slate-950 hover:bg-slate-100 sm:w-auto">
+                  Browse hostels
+                </Button>
+              </Link>
+              <Link to={appRoutes.auth}>
+                <Button variant="outline" className="w-full border-white/20 bg-transparent text-white hover:bg-white/10 sm:w-auto">
+                  Create account
+                </Button>
+              </Link>
+            </div>
+          </div>
+        </div>
+
         <div className="grid grid-cols-1 gap-10 md:grid-cols-4 md:gap-8">
           <div className="col-span-1 md:col-span-1">
-            <BrandMark className="mb-4" compact />
             <p className="max-w-sm text-sm leading-6 text-slate-400">
               Uganda's leading platform for student hostel discovery. Find
-              verified hostels near your university with ease.
+              verified hostels near your university with less friction.
             </p>
           </div>
 
@@ -22,9 +50,7 @@ export default function Footer() {
               <li>Makerere University</li>
               <li>Kyambogo University</li>
               <li>MUBS</li>
-              <li>KIU</li>
               <li>UCU</li>
-              <li>Nkumba University</li>
             </ul>
           </div>
 
@@ -35,7 +61,7 @@ export default function Footer() {
             <ul className="space-y-2 text-sm text-slate-400">
               <li>
                 <Link
-                  to="/search"
+                  to={appRoutes.search}
                   className="transition-colors hover:text-white"
                 >
                   Browse Hostels
@@ -43,14 +69,14 @@ export default function Footer() {
               </li>
               <li>
                 <Link
-                  to="/auth?mode=signup"
+                  to={`${appRoutes.auth}?mode=signup`}
                   className="transition-colors hover:text-white"
                 >
                   Student Registration
                 </Link>
               </li>
               <li>
-                <Link to="/faq" className="transition-colors hover:text-white">
+                <Link to={appRoutes.faq} className="transition-colors hover:text-white">
                   FAQs
                 </Link>
               </li>
