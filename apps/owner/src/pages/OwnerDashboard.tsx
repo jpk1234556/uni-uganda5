@@ -382,6 +382,11 @@ export default function OwnerDashboard() {
 
   const handleCreateProperty = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!user) {
+      toast.error("You must be signed in to add a property.");
+      return;
+    }
+
     try {
       setIsCreating(true);
 
@@ -415,6 +420,7 @@ export default function OwnerDashboard() {
       setWizardStep(3);
       fetchData();
     } catch (error: unknown) {
+      console.error("handleCreateProperty error:", error);
       toast.error(getErrorMessage(error, "Failed to create property"));
     } finally {
       setIsCreating(false);
@@ -539,6 +545,11 @@ export default function OwnerDashboard() {
   };
 
   const openPropertyWizard = () => {
+    if (!user) {
+      toast.error("You must be signed in to add a property.");
+      return;
+    }
+
     setWizardStep(1);
     setCreatedHostelId(null);
     clearSelectedRoomImages();

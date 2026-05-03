@@ -363,7 +363,7 @@ export default function Search() {
           {/* Filters Sidebar */}
           <div className="w-full lg:w-1/4 space-y-6">
             <div className="bg-white p-6 rounded-2xl shadow-md border border-slate-300 sticky top-20">
-              <h3 className="font-black text-lg text-slate-950 mb-4 tracking-tight">
+              <h3 className="font-black text-2xl text-slate-900 mb-6 tracking-tight flex items-center gap-2">
                 Filters
               </h3>
 
@@ -392,10 +392,10 @@ export default function Search() {
 
                 <div className="space-y-4 pt-4 border-t border-slate-200">
                   <div className="flex justify-between items-center">
-                    <label className="text-sm font-semibold text-slate-800">
+                    <label className="text-sm font-bold text-slate-900">
                       Price Range (UGX)
                     </label>
-                    <span className="text-xs font-semibold text-slate-600">
+                    <span className="text-sm font-bold text-indigo-600 bg-indigo-50 px-2 py-1 rounded-md">
                       {priceRange[0] === 0 ? "0" : `${priceRange[0] / 1000}k`} - {priceRange[1] >= 10000000 ? "10M+" : `${priceRange[1] / 1000}k`}
                     </span>
                   </div>
@@ -512,7 +512,7 @@ export default function Search() {
               </div>
 
               <Button
-                className="w-full mt-8 bg-gradient-primary text-white hover:opacity-90 shadow-md font-semibold"
+                className="w-full mt-8 bg-indigo-600 hover:bg-indigo-700 text-white shadow-md font-bold py-6 text-base rounded-xl transition-all"
                 onClick={resetFilters}
               >
                 Reset Filters
@@ -532,7 +532,7 @@ export default function Search() {
                   onChange={(e) => setSearchTerm(e.target.value)}
                 />
               </div>
-              <Button className="h-12 px-8 rounded-xl shadow-md bg-gradient-primary hover:opacity-90 text-white font-semibold sm:w-auto w-full">
+              <Button className="h-12 px-8 rounded-xl shadow-md bg-indigo-600 hover:bg-indigo-700 text-white font-bold sm:w-auto w-full transition-all">
                 Search
               </Button>
             </div>
@@ -542,8 +542,8 @@ export default function Search() {
                 <h2 className="text-3xl font-black tracking-tight text-slate-900">
                   Available Hostels
                 </h2>
-                <p className="text-slate-700 font-semibold">
-                  Showing {filteredHostels.length} available properties
+                <p className="text-slate-600 font-medium text-lg mt-1">
+                  Showing <span className="font-bold text-indigo-600">{filteredHostels.length}</span> available properties
                 </p>
                 {activeFilters.length > 0 ? (
                   <div className="mt-3 flex flex-wrap gap-2">
@@ -588,10 +588,21 @@ export default function Search() {
                 </p>
               </div>
             ) : filteredHostels.length === 0 ? (
-              <div className="text-center py-20 border border-dashed border-slate-300 rounded-xl bg-slate-50">
-                <p className="text-slate-700 text-lg font-semibold">
-                  No properties match your current filters.
+              <div className="text-center py-24 border-2 border-dashed border-slate-200 rounded-3xl bg-slate-50/50">
+                <div className="bg-white h-16 w-16 rounded-full flex items-center justify-center mx-auto mb-4 shadow-sm border border-slate-100">
+                  <SearchIcon className="h-6 w-6 text-slate-400" />
+                </div>
+                <h3 className="text-xl font-bold text-slate-900 mb-2">No properties found</h3>
+                <p className="text-slate-500 font-medium max-w-sm mx-auto">
+                  Try adjusting your filters or search terms to find what you're looking for.
                 </p>
+                <Button 
+                  variant="outline" 
+                  onClick={resetFilters}
+                  className="mt-6 rounded-xl border-slate-300 font-semibold text-slate-700 hover:bg-slate-100"
+                >
+                  Clear all filters
+                </Button>
               </div>
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
