@@ -584,6 +584,17 @@ export default function OwnerDashboard() {
     }
   };
 
+  const setImageAsPrimary = (index: number) => {
+    if (index === 0) return;
+    setEditingImages((prev) => {
+      const next = [...prev];
+      const [moved] = next.splice(index, 1);
+      next.unshift(moved);
+      return next;
+    });
+    toast.success("Image set as primary");
+  };
+
   const handleUpdateBookingStatus = async (
     bookingId: string,
     status: "approved" | "rejected",
@@ -1740,7 +1751,7 @@ export default function OwnerDashboard() {
             <DialogHeader>
               <DialogTitle className="text-xl font-bold">Edit Room Photos</DialogTitle>
               <DialogDescription className="text-sm text-slate-500">
-                Reorder images by dragging thumbnails. Save to persist order.
+                Drag to reorder or click "Set as Primary" to choose the listing thumbnail.
               </DialogDescription>
             </DialogHeader>
 
@@ -1750,20 +1761,37 @@ export default function OwnerDashboard() {
               ) : editingImages.length === 0 ? (
                 <div className="py-8 text-center text-sm text-slate-500">No photos for this room.</div>
               ) : (
-                <div className="grid grid-cols-4 gap-3">
-                  {editingImages.map((src, idx) => (
-                    <div
-                      key={`${src}-${idx}`}
-                      draggable
-                      onDragStart={(e) => onDragStartImage(e, idx)}
-                      onDragOver={onDragOverImage}
-                      onDrop={(e) => onDropImage(e, idx)}
-                      className="relative rounded-md overflow-hidden border border-slate-200 bg-slate-50"
-                    >
-                      <img src={src} alt={`photo-${idx + 1}`} className="h-28 w-full object-cover" />
-                      <div className="absolute left-1 top-1 text-[11px] bg-white/70 text-slate-700 px-2 py-0.5 rounded">{idx + 1}</div>
-                    </div>
-                  ))}
+                <div className="space-y-3">
+                  <div className="grid grid-cols-4 gap-3">
+                    {editingImages.map((src, idx) => (
+                      <div
+                        key={`${src}-${idx}`}
+                        draggable
+                        onDragStart={(e) => onDragStartImage(e, idx)}
+                        onDragOver={onDragOverImage}
+                        onDrop={(e) => onDropImage(e, idx)}
+                        className={cn("relative rounded-md overflow-hidden group", idx === 0 ? "ring-2 ring-primary" : "border border-slate-200")}
+                      >
+                        <img src={src} alt={`photo-${idx + 1}`} className="h-28 w-full object-cover" />
+                        {idx === 0 && (
+                          <div className="absolute top-2 right-2 bg-primary text-white text-xs font-bold px-2 py-1 rounded-full flex items-center gap-1">
+                            ✨ Primary
+                          </div>
+                        )}
+                        <div className="absolute left-1 top-1 text-[11px] bg-black/50 text-white px-2 py-0.5 rounded font-semibold">{idx + 1}</div>
+                        {idx > 0 && (
+                          <button
+                            type="button"
+                            onClick={() => setImageAsPrimary(idx)}
+                            className="absolute inset-0 flex items-center justify-center bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity text-white text-xs font-bold"
+                          >
+                            Set as Primary
+                          </button>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                  <p className="text-xs text-slate-500 font-medium text-center">The first image appears in hostel listings. Drag to reorder or click "Set as Primary" above.</p>
                 </div>
               )}
             </div>
