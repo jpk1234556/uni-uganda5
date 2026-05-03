@@ -129,6 +129,12 @@ export default function OwnerDashboard() {
   const refreshTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const ownedHostelIdsRef = useRef<Set<string>>(new Set());
 
+  // Image editor / reorder state
+  const [imageEditorOpen, setImageEditorOpen] = useState(false);
+  const [editingRoom, setEditingRoom] = useState<RoomType | null>(null);
+  const [editingImages, setEditingImages] = useState<string[]>([]);
+  const dragIndexRef = useRef<number | null>(null);
+
   const bookingTrendData = useMemo(() => {
     const formatter = new Intl.DateTimeFormat("en-UG", { month: "short" });
     const now = new Date();
@@ -524,6 +530,57 @@ export default function OwnerDashboard() {
       if (selectedHostel) fetchRooms(selectedHostel.id);
     } catch (error) {
       toast.error("Failed to delete room type");
+    }
+  };
+
+  // Open image editor with room images preloaded
+  const openImageEditor = (room: RoomType) => {
+    setEditingRoom(room);
+    setEditingImages(room.images ? [...room.images] : []);
+    setImageEditorOpen(true);
+  };
+
+  const onDragStartImage = (e: React.DragEvent, index: number) => {
+    dragIndexRef.current = index;
+    try {
+      e.dataTransfer?.setData("text/plain", String(index));
+    } catch {}
+    e.dataTransfer.effectAllowed = "move";
+  };
+
+  const onDragOverImage = (e: React.DragEvent) => {
+    e.preventDefault();
+  };
+
+  const onDropImage = (e: React.DragEvent, targetIndex: number) => {
+    e.preventDefault();
+    const fromIndex = dragIndexRef.current;
+    if (fromIndex === null || fromIndex === undefined) return;
+    if (fromIndex === targetIndex) return;
+    setEditingImages((prev) => {
+      const next = [...prev];
+      const [moved] = next.splice(fromIndex, 1);
+      next.splice(targetIndex, 0, moved);
+      return next;
+    });
+    dragIndexRef.current = null;
+  };
+
+  const saveImageOrder = async () => {
+    if (!editingRoom || !selectedHostel) return;
+    try {
+      const payload = editingImages.length > 0 ? editingImages : null;
+      const { error } = await supabase
+        .from("room_types")
+        .update({ images: payload })
+        .eq("id", editingRoom.id);
+      if (error) throw error;
+      toast.success("Saved image order");
+      setImageEditorOpen(false);
+      fetchRooms(selectedHostel.id);
+    } catch (err) {
+      console.error(err);
+      toast.error("Failed to save image order");
     }
   };
 
@@ -1566,7 +1623,16 @@ export default function OwnerDashboard() {
                             <TableCell className="text-sm text-slate-600">
                               {room.capacity}
                             </TableCell>
-                            <TableCell className="text-right pr-4">
+                            <TableCell className="text-right pr-4 flex items-center justify-end gap-2">
+                              <Button
+                                onClick={() => openImageEditor(room)}
+                                variant="ghost"
+                                size="sm"
+                                className="h-8 w-8 p-0 text-slate-400 hover:text-primary hover:bg-primary/10 rounded-lg"
+                                title="Edit photos"
+                              >
+                                <ImageIcon className="h-4 w-4" />
+                              </Button>
                               <Button
                                 onClick={() => handleDeleteRoom(room.id)}
                                 variant="ghost"
@@ -1649,6 +1715,68 @@ export default function OwnerDashboard() {
                   </div>
                 </form>
               </div>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Image Editor Dialog */}
+      <Dialog
+        open={imageEditorOpen}
+        onOpenChange={(open) => {
+          setImageEditorOpen(open);
+          if (!open) {
+            setEditingRoom(null);
+            setEditingImages([]);
+            dragIndexRef.current = null;
+          }
+        }}
+      >
+        <DialogContent className="max-w-2xl p-0 rounded-2xl border-0 shadow-2xl bg-white">
+          <div className="p-6">
+            <DialogHeader>
+              <DialogTitle className="text-xl font-bold">Edit Room Photos</DialogTitle>
+              <DialogDescription className="text-sm text-slate-500">
+                Reorder images by dragging thumbnails. Save to persist order.
+              </DialogDescription>
+            </DialogHeader>
+
+            <div className="mt-4">
+              {!editingRoom ? (
+                <div className="py-8 text-center text-sm text-slate-500">No room selected.</div>
+              ) : editingImages.length === 0 ? (
+                <div className="py-8 text-center text-sm text-slate-500">No photos for this room.</div>
+              ) : (
+                <div className="grid grid-cols-4 gap-3">
+                  {editingImages.map((src, idx) => (
+                    <div
+                      key={`${src}-${idx}`}
+                      draggable
+                      onDragStart={(e) => onDragStartImage(e, idx)}
+                      onDragOver={onDragOverImage}
+                      onDrop={(e) => onDropImage(e, idx)}
+                      className="relative rounded-md overflow-hidden border border-slate-200 bg-slate-50"
+                    >
+                      <img src={src} alt={`photo-${idx + 1}`} className="h-28 w-full object-cover" />
+                      <div className="absolute left-1 top-1 text-[11px] bg-white/70 text-slate-700 px-2 py-0.5 rounded">{idx + 1}</div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            <div className="mt-6 flex justify-end gap-3">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setImageEditorOpen(false)}
+                className="h-10"
+              >
+                Cancel
+              </Button>
+              <Button type="button" className="h-10" onClick={saveImageOrder}>
+                Save Order
+              </Button>
             </div>
           </div>
         </DialogContent>
