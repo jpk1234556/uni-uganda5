@@ -805,7 +805,7 @@ export default function HostelDetail() {
                             </div>
                           </div>
 
-                          <div className="p-5 md:border-l border-slate-200 flex md:flex-col items-center md:items-end justify-between gap-3 bg-slate-50/60">
+                          <div className="p-5 md:border-l border-slate-200 flex md:flex-col items-center md:items-end justify-between gap-3 bg-slate-50/40">
                             <div className="text-2xl font-black text-primary">
                               {formatUGX(room.price)}
                             </div>
@@ -822,7 +822,7 @@ export default function HostelDetail() {
                                   : "secondary"
                               }
                               className={cn(
-                                "w-full md:w-32 font-semibold shadow-sm cursor-pointer",
+                                "w-full md:w-32 font-bold shadow-md cursor-pointer transition-transform active:scale-95",
                                 Number(room.available) > 0
                                   ? "bg-primary hover:bg-primary/90 text-white"
                                   : "bg-slate-200 text-slate-500 cursor-not-allowed",

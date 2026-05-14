@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useMemo } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -47,19 +47,10 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import type { Notification, Message } from "@/types";
-
-interface ConversationParticipant {
-  id: string;
-  first_name: string;
-  last_name: string;
-  email?: string | null;
-}
-
-interface ConversationThread {
-  participant: ConversationParticipant;
-  messages: Message[];
-  unreadCount: number;
-}
+import {
+  useConversationThreads,
+  type ConversationParticipant,
+} from "@/hooks/useConversationThreads";
 
 const formatUGX = (amount: number | string | null | undefined) =>
   new Intl.NumberFormat("en-UG", {
@@ -301,82 +292,55 @@ export default function StudentDashboard() {
     }
   }, [user]);
 
-  //pGrpup messages by pargecipant ints a Map for O(1) lookups
-  co st ty pargMapecipant inups
-  coif (!um 
-    if (!user) return map;
+  const { conversationThreads, currentConversationMessages } =
+    useConversationThreads(messages, user?.id, activeConversation?.id);
 
-    for (const for (co  f   f   fs                 msa) {
-      const isOuugouggnsgnst participantId = isOutgoin;
-g     const participantId = isOutgoing           ? message.receiver_id : message.sender_id;
-      const p  i=Outoong
-      lh) = coniue
-      lh) = coniue
-      lh) = m
-      lh) = m
-      if (!dh{ed) {
-        hrd = {
-          p:
-              p:
-                  p:
-                      p
-                   p
-           ,           ,           ,           ,           ,           ,           ,           ,           ,           ,          },
-          mmssases: [],],],],],],],],],],],
-          unr adCount: 0,
-        };
-        map.net(parric paatId, thread);
-      }
-
-      threadCount: 0,
-      };!iOutong
-      mathrpadrric paatId,+tad);
+  useEffect(() => {
+    if (user) {
+      fetchApplications();
+      fetchSavedHostels();
+      fetchCartItems();
+      fetchNotifications();
+      fetchMessages();
     }
+  }, [
+    user,
+    fetchApplications,
+    fetchSavedHostels,
+    fetchCartItems,
+    fetchNotifications,
+    fetchMessages,
+  ]);
 
-  th0uimu;
-at},h[rpadrric,puItra););
+  useEffect(() => {
+    if (!user) return;
 
-  // Deiv sredarrayfortheUIdba
-contconvrtonThs=useMemo((;a=>t{padrric,puItra););
-convrtonThs=useMemo((;a=>Ma,tra););
-convrtonThs=useMemo((;a=>Ma,tra););
-convrtonThs=useMemo((;a=>Ma,tra););
-convrtonThs=useMemo((;a=>Ma,tra););
-convrtonThs=useMemo((;a=>Ma,tra););
-convrtthrnsdsMap(;a=>Ma,tra););
-convrtthrnsdsMap(;a=>Ma,tra););
-convrtthrnsdsMap(( =>Ma,+r;);
-convrtthr =>Ms,er]);
-    //iOptimezod: Ot1emlookupninMtaofO(N) filt
-    ",tumn""h em,=M p.{t()?., fetcs||[]
-nges",thradMp
-        { evet: "*", schema: "public", table: "messa },
+    const messagesSub = supabase
+      .channel("public:messages")
+      .on(
+        "postgres_changes" as any,
+        { event: "*", schema: "public", table: "messages" },
         () => {
+          fetchMessages();
+        },
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(messagesSub);
+    };
+  }, [user, fetchMessages]);
+
   const removeFavorite = async (favoriteId: string) => {
-    try n(
-{nges",
-        { evet: "*", schema: "public", table: "messa },
-        () => {
+    try {
       const { error } = await supabase
-        n(
-.from("favorites")nges",
-        { evet: "*", schema: "public", table: "messa },
-        () => {
+        .from("favorites")
         .delete()
-        n(
-.eq("id", favoriteId)nges",
-        { eve;t: "*", schema: "public", table: "messa },
-        () => {
+        .eq("id", favoriteId);
 
-      ifn(
- (error) throw error;nges",
-        { evet: "*", schema: "public", table: "messa },
-        () => {
+      if (error) throw error;
       setSavedHostels((prev) => prev.filter((f) => f.id !== favoriteId));
-      ton(
-ast.success("Removed nges",
-        { eveft: "*", schema: "public", table: "messarom  },
-        () => {saved hostels");
+      toast.success("Removed from saved hostels");
     } catch (error) {
       toast.error("Failed to remove favorite");
     }
@@ -418,34 +382,67 @@ ast.success("Removed nges",
   };
 
   const markAllNotificationsAsRead = async () => {
-    if (!user || notifications.every(n => n.is_read)) return;
+    const unreadNotificationIds = notifications
+      .filter((notification) => !notification.is_read)
+      .map((notification) => notification.id);
 
-    (!uer||cev {yeat su
+    if (unreadNotificationIds.length === 0) return;
+
+    try {
+      const { error } = await supabase
+        .from("notifications")
+        .update({ is_read: true })
+        .in("id", unreadNotificationIds);
+
+      if (error) throw error;
+      setNotifications((prev) =>
+        prev.map((notification) => ({ ...notification, is_read: true })),
+      );
+      toast.success("All notifications marked as read");
+    } catch (error) {
+      toast.error("Failed to update notifications");
+    }
+  };
+
+  const openConversation = async (participant: ConversationParticipant) => {
+    setActiveConversation(participant);
+    setMessageDraft("");
+
+    try {
+      const { error } = await supabase
+        .from("messages")
+        .update({ is_read: true })
+        .eq("sender_id", participant.id)
+        .eq("receiver_id", user?.id)
         .eq("is_read", false);
- (!uer||ievrryro;
-        .eq("is_", le
-   s(" (!uierc||tions marked acev (yrnat
-        .eq("is_", le
- (!uer||tevnCyn synct: Convt
-        .eq("is_", le
-    (!uer||cev {yeat su
-        .eq("is_id",", tilde)
-   eer (!urer?||id) ev("yss);
-        .eq("is_rev)", le
-   res (!uer|| evesyad=== id &&e
-        .eq("is_e,", le
-   , (!uer||)evy
-        .eq("is_", le
- }; (!uer||evy
-        .eq("is_", le
-    (!uer||cev {yeat su"messag
-        .eq("is_sage", trle
+
+      if (error) throw error;
+      setMessages((prev) =>
+        prev.map((message) =>
+          message.sender_id === participant.id &&
+          message.receiver_id === user?.id
+            ? { ...message, is_read: true }
+            : message,
+        ),
+      );
+    } catch (error) {
+      console.error("Failed to mark conversation read:", error);
+    }
+  };
+
+  const sendMessage = async () => {
+    if (!user || !activeConversation || !messageDraft.trim()) return;
+
+    try {
+      const { error } = await supabase.from("messages").insert({
+        sender_id: user.id,
+        receiver_id: activeConversation.id,
+        content: messageDraft.trim(),
       });
 
       if (error) throw error;
       setMessageDraft("");
-      awaeq fuser_etchMeser.id)
-        .eq("is_sage", le
+      await fetchMessages();
     } catch (error) {
       toast.error("Failed to send message");
     }

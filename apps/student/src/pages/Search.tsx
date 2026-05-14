@@ -588,13 +588,13 @@ export default function Search() {
                 </p>
               </div>
             ) : filteredHostels.length === 0 ? (
-              <div className="text-center py-24 border-2 border-dashed border-slate-200 rounded-3xl bg-slate-50/50">
+              <div className="text-center py-24 border-2 border-dashed border-slate-200 rounded-3xl bg-slate-50/50 animate-in fade-in slide-in-from-bottom-4 duration-500">
                 <div className="bg-white h-16 w-16 rounded-full flex items-center justify-center mx-auto mb-4 shadow-sm border border-slate-100">
                   <SearchIcon className="h-6 w-6 text-slate-400" />
                 </div>
-                <h3 className="text-xl font-bold text-slate-900 mb-2">No properties found</h3>
+                <h3 className="text-xl font-bold text-slate-900 mb-2">No matching hostels</h3>
                 <p className="text-slate-500 font-medium max-w-sm mx-auto">
-                  Try adjusting your filters or search terms to find what you're looking for.
+                  We couldn't find any hostels matching your current filters. Try broadening your search or resetting all filters.
                 </p>
                 <Button 
                   variant="outline" 
@@ -608,7 +608,7 @@ export default function Search() {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 {sortedHostels.map((hostel) => (
                   <Link to={`/hostel/${hostel.id}`} key={hostel.id}>
-                    <Card className="overflow-hidden bg-white border-slate-300 hover:border-primary/50 transition-all duration-300 group cursor-pointer shadow-sm hover:shadow-lg">
+                    <Card className="overflow-hidden bg-white border-slate-300 hover:border-primary/50 transition-all duration-300 group cursor-pointer shadow-sm hover:shadow-xl hover:-translate-y-1">
                       <div className="aspect-[4/3] relative overflow-hidden bg-muted">
                         {hostel.images?.[0] ? (
                           <img
