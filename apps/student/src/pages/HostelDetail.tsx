@@ -307,7 +307,7 @@ export default function HostelDetail() {
       const roomsSubscription = supabase
         .channel(`public:room_types:hostel_id=eq.${id}`)
         .on(
-          "postgres_changes" as any,
+          "postgres_changes",
           {
             event: "*",
             schema: "public",
@@ -342,7 +342,7 @@ export default function HostelDetail() {
       const reviewsSubscription = supabase
         .channel(`public:reviews:hostel_id=eq.${id}`)
         .on(
-          "postgres_changes" as any,
+          "postgres_changes",
           {
             event: "*",
             schema: "public",
@@ -601,7 +601,14 @@ export default function HostelDetail() {
       {/* Hidden preloads for next images */}
       <div className="hidden">
         {validImages.slice(1).map((img, i) => (
-          <img key={i} src={img} loading="lazy" decoding="async" alt="" />
+          <img 
+            key={i} 
+            src={img} 
+            loading="eager" 
+            decoding="async" 
+            alt="" 
+            aria-hidden="true" 
+          />
         ))}
       </div>
 
@@ -940,32 +947,24 @@ export default function HostelDetail() {
       </div>
 
       {/* Custom Booking Modal */}
-      {isBookingOpen && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 sm:p-6 animate-in fade-in duration-200">
-          <div 
-            className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm"
-            onClick={() => setIsBookingOpen(false)}
-          />
-          <div className="relative bg-white rounded-2xl shadow-2xl w-full max-w-[640px] max-h-[90vh] overflow-y-auto z-10 animate-in zoom-in-95 duration-200">
-            <div className="p-6 border-b border-slate-100 flex items-start justify-between sticky top-0 bg-white/95 backdrop-blur z-20">
-              <div>
-                <h2 className="text-xl font-bold text-slate-900">Request a Booking</h2>
+      <Dialog open={isBookingOpen} onOpenChange={setIsBookingOpen}>
+        <DialogContent className="sm:max-w-[640px] max-h-[90vh] overflow-y-auto p-0 gap-0">
+          <DialogHeader className="p-6 border-b border-slate-100 sticky top-0 bg-white/95 backdrop-blur z-20">
+            <div className="flex items-start justify-between">
+              <div className="text-left">
+                <DialogTitle className="text-xl font-bold text-slate-900">
+                  Request a Booking
+                </DialogTitle>
                 <p className="text-sm text-slate-500 mt-1">
                   Select a room, share your details, and send a booking request for{" "}
                   <span className="font-bold text-slate-900">{hostel.name}</span>.
                 </p>
               </div>
-              <button 
-                onClick={() => setIsBookingOpen(false)}
-                className="p-2 -mr-2 -mt-2 hover:bg-slate-100 rounded-full transition-colors text-slate-500 hover:text-slate-900"
-                type="button"
-              >
-                <X className="h-5 w-5" />
-              </button>
             </div>
-            
-            <div className="p-6">
-              <form onSubmit={handleBookingSubmit} className="space-y-4">
+          </DialogHeader>
+          
+          <div className="p-6">
+            <form onSubmit={handleBookingSubmit} className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="room">Room Type</Label>
               <Select
@@ -1126,9 +1125,8 @@ export default function HostelDetail() {
             </div>
           </form>
           </div>
-          </div>
-        </div>
-      )}
+        </DialogContent>
+      </Dialog>
 
       {/* Write a Review Dialog */}
       <Dialog open={isReviewOpen} onOpenChange={setIsReviewOpen}>
