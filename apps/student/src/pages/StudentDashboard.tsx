@@ -146,8 +146,11 @@ export default function StudentDashboard() {
 
       if (error) throw error;
       setApplications(data || []);
-    } catch {
-      toast.error("Failed to load applications");
+    } catch (error) {
+      const msg = String(error);
+      toast.error(msg.includes("Failed to fetch") 
+        ? "Network Error: Check your connection to Supabase" 
+        : "Failed to load applications");
     } finally {
       setIsLoading(false);
     }

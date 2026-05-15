@@ -76,6 +76,10 @@ interface RoomImageGalleryProps {
 
 const getErrorMessage = (error: unknown, fallback: string): string => {
   if (error instanceof Error && error.message) return error.message;
+  const errString = String(error);
+  if (errString.includes("Failed to fetch")) {
+    return "Network error: Unable to connect to Supabase. Check your internet connection and VITE_SUPABASE_URL configuration.";
+  }
   return fallback;
 };
 
@@ -293,6 +297,7 @@ export default function HostelDetail() {
       setReviews(normalizedReviews as ReviewWithUser[]);
     } catch (error) {
       toast.error("Failed to load hostel details");
+      console.error("HostelDetail Fetch Error:", error);
       console.error(error);
     } finally {
       setIsLoading(false);
